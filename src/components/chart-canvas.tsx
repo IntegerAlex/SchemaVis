@@ -133,6 +133,11 @@ export function ChartCanvas({ diagram }: ChartCanvasProps) {
     [fitView, getNode]
   );
 
+  const handlePaneClick = useCallback(() => {
+    // Clear focus/highlight when clicking on empty space
+    setHighlightedId(null);
+  }, []);
+
   return (
     <ReactFlow
       nodes={nodes}
@@ -150,6 +155,7 @@ export function ChartCanvas({ diagram }: ChartCanvasProps) {
       nodesConnectable={false}
       elementsSelectable={true}
       proOptions={{ hideAttribution: true }}
+      onPaneClick={handlePaneClick}
     >
       <Background />
       <Controls
