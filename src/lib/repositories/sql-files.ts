@@ -5,26 +5,40 @@
  */
 import { db } from '@/lib/db';
 import { sqlFiles, users } from '@/lib/schema';
-import { eq, desc } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 
-export async function ensureUser(params: {
+type UserUpsertParams = {
   id: string;
   email?: string | null;
   name?: string | null;
-}) {
-  const { id, email, name } = params;
+  imageUrl?: string | null;
+  publicMetadata?: Record<string, unknown> | null;
+  privateMetadata?: Record<string, unknown> | null;
+  unsafeMetadata?: Record<string, unknown> | null;
+};
+
+export async function ensureUser(params: UserUpsertParams) {
+  const { id, email, name, imageUrl, publicMetadata, privateMetadata, unsafeMetadata } = params;
   await db
     .insert(users)
     .values({
       id,
       email: email ?? null,
       name: name ?? null,
+      imageUrl: imageUrl ?? null,
+      publicMetadata: publicMetadata ?? null,
+      privateMetadata: privateMetadata ?? null,
+      unsafeMetadata: unsafeMetadata ?? null,
     })
     .onConflictDoUpdate({
       target: users.id,
       set: {
         email: email ?? null,
         name: name ?? null,
+        imageUrl: imageUrl ?? null,
+        publicMetadata: publicMetadata ?? null,
+        privateMetadata: privateMetadata ?? null,
+        unsafeMetadata: unsafeMetadata ?? null,
         updatedAt: new Date(),
       },
     });
@@ -47,6 +61,16 @@ export async function createSqlFile(params: {
     .returning();
 
   return created;
+}
+
+export async function findSqlFileByContent(userId: string, content: string) {
+  const [existing] = await db
+    .select({ id: sqlFiles.id })
+    .from(sqlFiles)
+    .where(and(eq(sqlFiles.userId, userId), eq(sqlFiles.content, content)))
+    .limit(1);
+
+  return existing ?? null;
 }
 
 export async function listSqlFiles(userId: string) {
