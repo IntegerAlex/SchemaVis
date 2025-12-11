@@ -1,0 +1,28 @@
+# SchemaVis NOTICE
+
+This project is licensed under the GNU Affero General Public License v3.0
+or later (see LICENSE or <https://www.gnu.org/licenses/agpl-3.0.txt>).
+
+## Copyright
+
+- Copyright (C) 2025 Akshat Kotpalliwar (IntegerAlex)
+
+## Attribution (upstream/third-party)
+
+- Portions of this software are derived from the chartdb project (AGPL-3.0).
+
+## Modified/derived components (non-exhaustive)
+
+- Visualization: chart-canvas, table-node (expand/focus UI), minimap styling
+- UI layout: visualizer layout and header
+- UI primitives: button, sidebar, file-uploader, resizable, separator
+- Licensing headers added to modified files
+
+## Compliance notes (OSI/GitHub norms)
+
+- Source, LICENSE, NOTICE, and COPYRIGHT are included in this repository.
+- Upstream chartdb AGPL-3.0 notices are preserved; SchemaVis remains AGPL-3.0-or-later.
+- Public deployments must provide Corresponding Source (see README for repository link).
+- See git history and commit logs for a complete list of changes.
+
+Maintainer contact: Akshat Kotpalliwar (IntegerAlex)
