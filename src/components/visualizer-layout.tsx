@@ -88,31 +88,17 @@
             <div className="px-6 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 max-w-7xl w-full mx-auto">
             <div className="flex h-16 sm:h-18 lg:h-20 items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full overflow-hidden bg-white/5 border border-white/10 shadow-lg flex items-center justify-center">
                     <Image
                     src="/logo.png"
                     alt="SchemaVis logo"
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 object-contain"
+                    width={80}
+                    height={80}
+                    className="h-20 w-20 object-contain scale-150"
                     priority
                     />
                 </div>
-                <div className="leading-tight">
-                    <div className="text-sm uppercase tracking-wide text-slate-300">SchemaVis</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Schema visualizer</div>
-                </div>
-                </div>
 
                 <div className="hidden md:flex items-center gap-2 text-xs text-slate-300">
-                <div className="px-3 py-1 rounded-full border border-white/10 bg-white/5">AGPL v3</div>
-                <div className="px-3 py-1 rounded-full border border-white/10 bg-white/5">PostgreSQL-first</div>
-                <div className="px-3 py-1 rounded-full border border-white/10 bg-white/5">Clerk auth</div>
-                <SignedIn>
-                    <div className="ml-2">
-                    <UserButton afterSignOutUrl="/" />
-                    </div>
-                </SignedIn>
                 <SignedOut>
                     <SignInButton mode="modal">
                     <button className="ml-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 hover:bg-white/10 transition text-slate-100">
@@ -120,7 +106,7 @@
                     </button>
                     </SignInButton>
                 </SignedOut>
-                <a
+                {/* <a
                     href="https://github.com/IntegerAlex/SchemaVis"
                     target="_blank"
                     rel="noreferrer"
@@ -128,7 +114,7 @@
                 >
                     <Github className="h-4 w-4" />
                     <span>GitHub</span>
-                </a>
+                </a> */}
                 </div>
 
                 <div className="hidden md:flex items-center space-x-3">

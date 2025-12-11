@@ -5,6 +5,7 @@
 SchemaVis is an AGPL-3.0-or-later application for visualizing database schemas. It incorporates modifications derived from the chartdb project (AGPL-3.0).
 
 Repository: <https://github.com/IntegerAlex/SchemaVis>
+Live: <https://schemavis.gossorg.in>
 
 ## License
 
@@ -24,16 +25,6 @@ Repository: <https://github.com/IntegerAlex/SchemaVis>
 - Repository source (Corresponding Source) is available in this repo.
 - Public deployments must offer the Corresponding Source to users (per AGPL).
 - See `NOTICE` for upstream attribution and modified components.
-
-## Third-Party Services
-
-- When integrating services like Clerk/Neon, keep secrets in environment variables and respect their terms of service/licenses.
-
-## Data persistence
-
-- Drizzle ORM + Postgres
-- `/api/sql-files` POST: save SQL for the authenticated Clerk user (also upserts the user record)
-- `/api/sql-files` GET: list saved SQL entries for the authenticated user
 
 ## Contributing
 
