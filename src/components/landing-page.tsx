@@ -258,11 +258,11 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                   </span>
                 </button>
                 <SignedOut>
-                  <SignInButton mode="modal">
+                  {/* <SignInButton mode="modal">
                     <button className="px-7 py-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-semibold transition backdrop-blur-sm">
                       Sign in with Clerk
                     </button>
-                  </SignInButton>
+                  </SignInButton> */}
                 </SignedOut>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-slate-200/90">
