@@ -44,10 +44,10 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
   return (
     <div
       className={cn(
-        'bg-white dark:bg-zinc-800 border-2 rounded-lg shadow-lg min-w-[200px] transition-all',
+        'relative bg-white dark:bg-zinc-800 border-2 rounded-lg shadow-lg min-w-[200px] transition-all',
         selected
-          ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-500/30 brightness-110 contrast-110'
-          : 'border-zinc-300 dark:border-zinc-600',
+          ? 'z-20 border-blue-500 dark:border-blue-400 ring-2 ring-blue-500/30 brightness-110 contrast-110 shadow-xl'
+          : 'z-0 border-zinc-300 dark:border-zinc-600',
         dragging && 'opacity-80',
         isDimmed && !selected ? 'opacity-50 brightness-75' : ''
       )}
