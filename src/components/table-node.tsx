@@ -1,11 +1,12 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import { Handle, type NodeProps, Position } from '@xyflow/react';
-import type { DBTable, DBField } from '@/lib/domain/db-table';
+import { Handle, type NodeProps, Position, type Node } from '@xyflow/react';
+import type { DBTable } from '@/lib/domain/db-table';
+import type { DBField } from '@/lib/domain/db-field';
 import { cn } from '@/lib/utils';
 
-interface TableNodeData {
+interface TableNodeData extends Record<string, unknown> {
   table: DBTable;
   isDimmed?: boolean;
   isExpanded?: boolean;
@@ -13,7 +14,10 @@ interface TableNodeData {
   relatedFieldIds?: Set<string>;
 }
 
-export const TableNode = memo(({ data, selected, dragging }: NodeProps<TableNodeData>) => {
+type TableNodeType = Node<TableNodeData, 'table'>;
+
+export const TableNode = memo((props: NodeProps<TableNodeType>) => {
+  const { data, selected, dragging } = props;
   const { table, isDimmed, isExpanded, onToggleExpand, relatedFieldIds } = data;
   const maxCollapsed = 10;
 
@@ -21,10 +25,10 @@ export const TableNode = memo(({ data, selected, dragging }: NodeProps<TableNode
     if (isExpanded || table.fields.length <= maxCollapsed) return table.fields;
 
     const required = table.fields.filter(
-      (f) => f.primaryKey || relatedFieldIds?.has(f.id)
+      (f: DBField) => f.primaryKey || relatedFieldIds?.has(f.id)
     );
     const optional = table.fields.filter(
-      (f) => !(f.primaryKey || relatedFieldIds?.has(f.id))
+      (f: DBField) => !(f.primaryKey || relatedFieldIds?.has(f.id))
     );
 
     const keepRequired = required.slice(0, maxCollapsed);
@@ -32,7 +36,7 @@ export const TableNode = memo(({ data, selected, dragging }: NodeProps<TableNode
     const keepOptional = remainingSlots > 0 ? optional.slice(0, remainingSlots) : [];
 
     const keepSet = new Set([...keepRequired, ...keepOptional]);
-    return table.fields.filter((f) => keepSet.has(f));
+    return table.fields.filter((f: DBField) => keepSet.has(f));
   }, [isExpanded, table.fields, relatedFieldIds]);
 
   const isCollapsed = !isExpanded && table.fields.length > maxCollapsed;
@@ -71,14 +75,14 @@ export const TableNode = memo(({ data, selected, dragging }: NodeProps<TableNode
               type="source"
               position={Position.Right}
               id={`source-${field.id}`}
-              className="w-3 h-3 !bg-blue-500"
+              className="w-3 h-3 bg-blue-500"
             />
             {/* Target handle (left side) for incoming relationships */}
             <Handle
               type="target"
               position={Position.Left}
               id={`target-${field.id}`}
-              className="w-3 h-3 !bg-green-500"
+              className="w-3 h-3 bg-green-500"
             />
             <div className="flex items-center gap-2">
               <span className="font-medium text-zinc-900 dark:text-zinc-100">
