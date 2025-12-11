@@ -144,7 +144,7 @@
                 <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".sql,.txt"
+                    accept=".sql"
                     onChange={handleFileSelect}
                     className="hidden"
                 />
@@ -214,7 +214,7 @@
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".sql,.txt"
+                        accept=".sql"
                         onChange={handleFileSelect}
                         className="hidden"
                     />

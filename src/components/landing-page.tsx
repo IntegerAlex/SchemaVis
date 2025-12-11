@@ -234,7 +234,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             {/* Hero copy */}
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs text-slate-200 uppercase tracking-wide">
-                PostgreSQL-first · AGPL v3 · Clerk auth
+                supports PostgreSQL for now.
               </div>
               <h1 className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight">
                 Visualize your schema in seconds.

@@ -4,7 +4,13 @@ import { sqlImportToDiagram } from '@/lib/parsers';
 import { DatabaseType } from '@/lib/domain/database-type';
 
 const parseSQLSchema = z.object({
-  sql: z.string().min(1, 'SQL content cannot be empty'),
+  sql: z
+    .string()
+    .min(1, 'SQL content cannot be empty')
+    .refine(
+      (val) => val.toLowerCase().includes('create table'),
+      'SQL must include at least one CREATE TABLE statement'
+    ),
 });
 
 export async function POST(request: NextRequest) {
@@ -13,9 +19,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { sql } = parseSQLSchema.parse(body);
 
-    if (!sql || typeof sql !== 'string') {
+    if (!sql || typeof sql !== 'string' || !sql.toLowerCase().includes('create table')) {
       return NextResponse.json(
-        { error: 'Invalid request: SQL content is required' },
+        { error: 'Invalid request: only .sql with CREATE TABLE is allowed' },
         { status: 400 }
       );
     }
