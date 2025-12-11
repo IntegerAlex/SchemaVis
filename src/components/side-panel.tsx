@@ -100,7 +100,7 @@ export function SidePanel({ className }: SidePanelProps) {
           {parseMutation.error && (
             <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
               <strong>Error:</strong>{' '}
-              {parseMutation.error.message || 'Failed to parse SQL'}
+              {parseMutation.error.error || 'Failed to parse SQL'}
             </div>
           )}
         </div>

@@ -216,8 +216,8 @@ function processForeignKeyConstraint(
 function extractColumnsFromCreateTable(statement: string): SQLColumn[] {
     const columns: SQLColumn[] = [];
 
-    // Extract everything between the first opening and last closing parenthesis
-    const columnMatch = statement.match(/CREATE\s+TABLE.*?\((.*)\)[^)]*;$/s);
+    // Extract everything between the first opening and last closing parenthesis (no dotAll flag for older targets)
+    const columnMatch = statement.match(/CREATE\s+TABLE[\s\S]*?\(([\s\S]*)\)[^)]*;$/);
     if (!columnMatch || !columnMatch[1]) {
         return columns;
     }

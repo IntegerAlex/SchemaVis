@@ -152,14 +152,8 @@ export interface SQLEnumType {
 // Helper functions for SQL dialect handling
 export function quoteIdentifier(str: string, dbType: DatabaseType): string {
     switch (dbType) {
-        case DatabaseType.MYSQL:
-        case DatabaseType.MARIADB:
-            return `\`${str}\``;
         case DatabaseType.POSTGRESQL:
-        case DatabaseType.SQLITE:
             return `"${str}"`;
-        case DatabaseType.SQL_SERVER:
-            return `[${str}]`;
         default:
             return str;
     }
@@ -230,22 +224,6 @@ export function buildSQLFromAST(
         // Some PostgreSQL functions don't have parentheses (like CURRENT_TIMESTAMP)
         if (funcName === 'CURRENT_TIMESTAMP' && !func.args) {
             return funcName;
-        }
-
-        // Handle SQL Server function defaults that were preprocessed as strings
-        // The preprocessor converts NEWID() to 'newid', GETDATE() to 'getdate', etc.
-        if (dbType === DatabaseType.SQL_SERVER) {
-            const sqlServerFunctions: Record<string, string> = {
-                newid: 'NEWID()',
-                newsequentialid: 'NEWSEQUENTIALID()',
-                getdate: 'GETDATE()',
-                sysdatetime: 'SYSDATETIME()',
-            };
-
-            const lowerFuncName = funcName.toLowerCase();
-            if (sqlServerFunctions[lowerFuncName]) {
-                return sqlServerFunctions[lowerFuncName];
-            }
         }
 
         let expr = funcName;

@@ -45,7 +45,7 @@ export function SQLInput({ parseMutation }: SQLInputProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".sql,.txt"
+        accept=".sql"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -60,7 +60,7 @@ export function SQLInput({ parseMutation }: SQLInputProps) {
 
       {parseMutation.error && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400">
-          <strong>Error:</strong> {parseMutation.error.message || 'Failed to parse SQL'}
+          <strong>Error:</strong> {parseMutation.error.error || 'Failed to parse SQL'}
         </div>
       )}
 
