@@ -1,4 +1,9 @@
 'use client';
+/**
+ * This file is part of the SchemaVis project.
+ * Copyright (C) 2025 Akshat Kotpalliwar (IntegerAlex)
+ * Licensed under the GNU Affero General Public License v3.0 or later.
+ */
 
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import * as React from 'react';
