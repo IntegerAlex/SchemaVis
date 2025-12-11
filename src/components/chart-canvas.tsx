@@ -25,13 +25,19 @@ import type { Diagram } from '@/lib/domain/diagram';
 
 interface ChartCanvasProps {
   diagram: Diagram | null;
+  showMiniMap?: boolean;
+  showControls?: boolean;
 }
 
 const nodeTypes: NodeTypes = {
   table: TableNode as React.ComponentType<any>,
 };
 
-export function ChartCanvas({ diagram }: ChartCanvasProps) {
+export function ChartCanvas({
+  diagram,
+  showMiniMap = true,
+  showControls = true,
+}: ChartCanvasProps) {
   const { fitView, getNode } = useReactFlow();
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
@@ -163,21 +169,25 @@ export function ChartCanvas({ diagram }: ChartCanvasProps) {
       onPaneClick={handlePaneClick}
     >
       <Background />
-      <Controls
-        className="bg-transparent! [&_button]:bg-black [&_button]:text-white [&_button]:border-zinc-700 [&_button]:hover:bg-zinc-900 [&_button]:hover:text-white"
-      />
-      <MiniMap
-        className="rounded-xl border border-white/10 bg-white/0 backdrop-blur-2xl backdrop-saturate-150 shadow-lg shadow-blue-500/15"
-        nodeColor={(n) =>
-          n.id === highlightedId ? '#60a5fa' : '#94a3b8'
-        }
-        nodeStrokeColor={(n) =>
-          n.id === highlightedId ? '#93c5fd' : '#cbd5e1'
-        }
-        maskColor="rgba(255,255,255,0.04)"
-        pannable
-        zoomable
-      />
+      {showControls && (
+        <Controls
+          className="bg-transparent! [&_button]:bg-black [&_button]:text-white [&_button]:border-zinc-700 [&_button]:hover:bg-zinc-900 [&_button]:hover:text-white"
+        />
+      )}
+      {showMiniMap && (
+        <MiniMap
+          className="rounded-xl border border-white/10 bg-white/0 backdrop-blur-2xl backdrop-saturate-150 shadow-lg shadow-blue-500/15"
+          nodeColor={(n) =>
+            n.id === highlightedId ? '#60a5fa' : '#94a3b8'
+          }
+          nodeStrokeColor={(n) =>
+            n.id === highlightedId ? '#93c5fd' : '#cbd5e1'
+          }
+          maskColor="rgba(255,255,255,0.04)"
+          pannable
+          zoomable
+        />
+      )}
     </ReactFlow>
   );
 }

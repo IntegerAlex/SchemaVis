@@ -10,8 +10,10 @@
     import { Button } from './ui/button';
     import { useParseSQLContext } from '@/context/parse-sql-context';
     import { cn } from '@/lib/utils';
-    import { Upload, FileText, Loader2, Menu, X, ExternalLink } from 'lucide-react';
+    import Image from 'next/image';
+    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Github } from 'lucide-react';
     import { ReactFlowProvider } from '@xyflow/react';
+    import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
 
     interface VisualizerLayoutProps {
     className?: string;
@@ -27,8 +29,7 @@
 
     const navLinks = React.useMemo(
         () => [
-        { href: '#', text: 'Home' },
-        { href: '#', text: 'About' },
+        { href: '', text: '' },
         ],
         []
     );
@@ -85,27 +86,50 @@
             )}
         >
             <div className="px-6 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 max-w-7xl w-full mx-auto">
-            <div className="flex h-16 sm:h-18 lg:h-20 items-center justify-between">
-                <div className="flex items-center space-x-3">
-                <a href="#" className="flex items-center space-x-2 group">
-                    <span className="font-bold text-xl lg:text-2xl text-gray-900 dark:text-gray-100">
-                   Schema Vis
-                    </span>
-                </a>
+            <div className="flex h-16 sm:h-18 lg:h-20 items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full overflow-hidden bg-white/5 border border-white/10 shadow-lg flex items-center justify-center">
+                    <Image
+                    src="/logo.png"
+                    alt="SchemaVis logo"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 object-contain"
+                    priority
+                    />
+                </div>
+                <div className="leading-tight">
+                    <div className="text-sm uppercase tracking-wide text-slate-300">SchemaVis</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Schema visualizer</div>
+                </div>
                 </div>
 
-                <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
-                {navLinks.map((link) => (
-                    <a
-                    key={link.text}
-                    href={link.href}
-                    className="text-sm lg:text-base font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors relative group"
-                    >
-                    {link.text}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gray-900 dark:bg-gray-100 transition-all duration-300 group-hover:w-full"></span>
-                    </a>
-                ))}
-                </nav>
+                <div className="hidden md:flex items-center gap-2 text-xs text-slate-300">
+                <div className="px-3 py-1 rounded-full border border-white/10 bg-white/5">AGPL v3</div>
+                <div className="px-3 py-1 rounded-full border border-white/10 bg-white/5">PostgreSQL-first</div>
+                <div className="px-3 py-1 rounded-full border border-white/10 bg-white/5">Clerk auth</div>
+                <SignedIn>
+                    <div className="ml-2">
+                    <UserButton afterSignOutUrl="/" />
+                    </div>
+                </SignedIn>
+                <SignedOut>
+                    <SignInButton mode="modal">
+                    <button className="ml-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 hover:bg-white/10 transition text-slate-100">
+                        <span>Sign in</span>
+                    </button>
+                    </SignInButton>
+                </SignedOut>
+                <a
+                    href="https://github.com/IntegerAlex/SchemaVis"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 hover:bg-white/10 transition text-slate-100"
+                >
+                    <Github className="h-4 w-4" />
+                    <span>GitHub</span>
+                </a>
+                </div>
 
                 <div className="hidden md:flex items-center space-x-3">
                 <Button
@@ -138,6 +162,9 @@
                     onChange={handleFileSelect}
                     className="hidden"
                 />
+                <SignedIn>
+                    <UserButton afterSignOutUrl="/" />
+                </SignedIn>
                 </div>
 
                 <button
@@ -205,6 +232,11 @@
                         onChange={handleFileSelect}
                         className="hidden"
                     />
+                    <SignedIn>
+                        <div className="flex justify-center pt-2">
+                        <UserButton afterSignOutUrl="/" />
+                        </div>
+                    </SignedIn>
                     </div>
                 </div>
                 </div>

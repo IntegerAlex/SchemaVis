@@ -69,7 +69,7 @@ export function detectDatabaseType(sqlContent: string): DatabaseType | null {
 /**
  * Parse SQL statements and convert to a Diagram object
  * @param sqlContent SQL content as string
- * @param sourceDatabaseType Source database type
+ * @param sourceDatabaseType Source doatabase type
  * @param targetDatabaseType Target database type for the diagram
  * @returns Diagram object
  */

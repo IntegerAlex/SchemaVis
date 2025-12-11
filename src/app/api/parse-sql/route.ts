@@ -9,6 +9,7 @@ const parseSQLSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const start = Date.now();
     const body = await request.json();
     const { sql } = parseSQLSchema.parse(body);
 
@@ -26,7 +27,10 @@ export async function POST(request: NextRequest) {
       targetDatabaseType: DatabaseType.POSTGRESQL,
     });
 
-    return NextResponse.json({ diagram }, { status: 200 });
+    const durationMs = Date.now() - start;
+    console.log(`[parse-sql] parsed in ${durationMs}ms`);
+
+    return NextResponse.json({ diagram, durationMs }, { status: 200 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
