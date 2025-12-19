@@ -30,6 +30,7 @@ Focused state highlighting a selected table while dimming others for clarity.
 - `DATABASE_URL` (Postgres)
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
+- `CLERK_WEBHOOK_SECRET` (for `/api/wekbook` Clerk webhook verification)
 
 ## Source and Compliance
 

@@ -7,36 +7,9 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { Webhook } from 'svix';
-import { createSqlFile, ensureUser, findSqlFileByContent } from '@/lib/repositories/sql-files';
+import { ensureUser } from '@/lib/repositories/sql-files';
 
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
-
-type SqlFromMetadata = {
-  content: string;
-  title?: string | null;
-};
-
-function extractSqlFromMetadata(metadata: unknown): SqlFromMetadata | null {
-  if (!metadata || typeof metadata !== 'object') return null;
-  const metadataRecord = metadata as Record<string, unknown>;
-
-  const rawContent = metadataRecord.sql;
-  const rawTitle = metadataRecord.sqlTitle ?? metadataRecord.sql_title;
-
-  if (typeof rawContent !== 'string') {
-    return null;
-  }
-
-  const trimmedContent = rawContent.trim();
-  if (!trimmedContent) {
-    return null;
-  }
-
-  const title =
-    typeof rawTitle === 'string' && rawTitle.trim().length > 0 ? rawTitle.trim() : null;
-
-  return { content: trimmedContent, title };
-}
 
 export async function POST(req: Request) {
   if (!webhookSecret) {
@@ -89,22 +62,6 @@ export async function POST(req: Request) {
       privateMetadata: (data as { private_metadata?: Record<string, unknown> }).private_metadata ?? null,
       unsafeMetadata: (data as { unsafe_metadata?: Record<string, unknown> }).unsafe_metadata ?? null,
     });
-
-    const sqlFromMetadata =
-      extractSqlFromMetadata((data as { public_metadata?: unknown }).public_metadata) ??
-      extractSqlFromMetadata((data as { private_metadata?: unknown }).private_metadata) ??
-      extractSqlFromMetadata((data as { unsafe_metadata?: unknown }).unsafe_metadata);
-
-    if (sqlFromMetadata?.content) {
-      const alreadyStored = await findSqlFileByContent(data.id, sqlFromMetadata.content);
-      if (!alreadyStored) {
-        await createSqlFile({
-          userId: data.id,
-          title: sqlFromMetadata.title ?? 'Clerk metadata import',
-          content: sqlFromMetadata.content,
-        });
-      }
-    }
   }
 
   return NextResponse.json({ received: type }, { status: 200 });

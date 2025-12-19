@@ -14,6 +14,8 @@
     import { Upload, FileText, Loader2, Menu, X, ExternalLink, Github } from 'lucide-react';
     import { ReactFlowProvider } from '@xyflow/react';
     import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
+    import { SqlFilesSidebar } from './sql-files-sidebar';
+    import { useQueryClient } from '@tanstack/react-query';
 
     interface VisualizerLayoutProps {
     className?: string;
@@ -26,6 +28,7 @@
     const [selectedFileName, setSelectedFileName] = React.useState<string | null>(null);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isScrolled, setIsScrolled] = React.useState(false);
+    const queryClient = useQueryClient();
 
     const navLinks = React.useMemo(
         () => [
@@ -57,6 +60,24 @@
         
         try {
             const text = await file.text();
+            
+            // Save to database
+            try {
+                await fetch('/api/sql-files', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: file.name,
+                        content: text,
+                    }),
+                });
+                // Invalidate query cache to refresh sidebar
+                queryClient.invalidateQueries({ queryKey: ['sql-files'] });
+            } catch (dbError) {
+                console.error('Error saving file to database:', dbError);
+                // Continue even if saving fails
+            }
+            
             parseMutation.mutate(text);
         } catch (error) {
             console.error('Error reading file:', error);
@@ -77,14 +98,12 @@
             className
         )}
         >
-        <header
-            className={cn(
-            'w-full transition-all duration-300 border-b',
-            isScrolled
-                ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl shadow-lg border-white/10'
-                : 'bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-white/5'
-            )}
-        >
+        <header className="w-full px-4 pt-4">
+            <div className={cn(
+                'w-full transition-all duration-300 rounded-2xl border border-white/10',
+                'bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_-30px_rgba(59,130,246,0.45)]',
+                isScrolled && 'shadow-lg'
+            )}>
             <div className="px-6 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 max-w-7xl w-full mx-auto">
             <div className="flex h-16 sm:h-18 lg:h-20 items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -121,7 +140,7 @@
                 <Button
                     onClick={handleUploadClick}
                     disabled={parseMutation.isPending}
-                    className="px-5 py-2 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-lg transform hover:scale-105 border border-white/10"
+                    className="px-5 py-2 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-lg transform hover:scale-105 border border-white/10"
                 >
                     {parseMutation.isPending ? (
                     <>
@@ -228,10 +247,18 @@
                 </div>
             </div>
             </div>
+            </div>
         </header>
 
-        {/* Canvas - Full Width */}
-        <div className="flex-1 overflow-hidden bg-slate-900/40 backdrop-blur-xl px-4 pb-6 pt-4">
+        {/* Main Content Area with Sidebar */}
+        <div className="flex-1 overflow-hidden flex">
+          {/* SQL Files Sidebar */}
+          <SignedIn>
+            <SqlFilesSidebar />
+          </SignedIn>
+
+          {/* Canvas */}
+          <div className="flex-1 overflow-hidden bg-slate-900/40 backdrop-blur-xl px-4 pb-6 pt-4">
             <div className="h-full w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_-30px_rgba(59,130,246,0.45)]">
             <ReactFlowProvider>
             {parseMutation.isPending ? (
@@ -263,6 +290,7 @@
             )}
             </ReactFlowProvider>
             </div>
+          </div>
         </div>
         </div>
     );

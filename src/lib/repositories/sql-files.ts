@@ -88,3 +88,19 @@ export async function listSqlFiles(userId: string) {
   return rows;
 }
 
+export async function getSqlFileById(userId: string, fileId: number) {
+  const [file] = await db
+    .select({
+      id: sqlFiles.id,
+      title: sqlFiles.title,
+      content: sqlFiles.content,
+      createdAt: sqlFiles.createdAt,
+      updatedAt: sqlFiles.updatedAt,
+    })
+    .from(sqlFiles)
+    .where(and(eq(sqlFiles.id, fileId), eq(sqlFiles.userId, userId)))
+    .limit(1);
+
+  return file ?? null;
+}
+
