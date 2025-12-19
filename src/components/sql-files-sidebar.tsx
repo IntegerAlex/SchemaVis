@@ -6,11 +6,13 @@
 'use client';
 
 import * as React from 'react';
-import { FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw } from 'lucide-react';
+import { FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useSqlFiles } from '@/hooks/use-sql-files';
 import { useParseSQLContext } from '@/context/parse-sql-context';
+import { useQueryClient } from '@tanstack/react-query';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
 function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
@@ -32,8 +34,11 @@ interface SqlFilesSidebarProps {
 
 export function SqlFilesSidebar({ className }: SqlFilesSidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false);
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = React.useState<{ fileId: number; fileName: string } | null>(null);
   const { data, isLoading, error, refetch } = useSqlFiles();
   const { parseMutation } = useParseSQLContext();
+  const queryClient = useQueryClient();
 
   const handleFileClick = React.useCallback(
     async (fileId: number) => {
@@ -50,6 +55,48 @@ export function SqlFilesSidebar({ className }: SqlFilesSidebarProps) {
     },
     [parseMutation]
   );
+
+  const handleDeleteClick = React.useCallback(
+    (fileId: number, fileName: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setConfirmDelete({ fileId, fileName });
+    },
+    []
+  );
+
+  const handleDeleteConfirm = React.useCallback(
+    async () => {
+      if (!confirmDelete) return;
+
+      const { fileId } = confirmDelete;
+      setDeletingId(fileId);
+      setConfirmDelete(null);
+
+      try {
+        const response = await fetch(`/api/sql-files/${fileId}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete file');
+        }
+
+        // Invalidate and refetch the files list
+        await queryClient.invalidateQueries({ queryKey: ['sql-files'] });
+        await refetch();
+      } catch (error) {
+        console.error('Error deleting SQL file:', error);
+        // Show error toast or notification here if you have one
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [confirmDelete, queryClient, refetch]
+  );
+
+  const handleDeleteCancel = React.useCallback(() => {
+    setConfirmDelete(null);
+  }, []);
 
   const files = data?.files ?? [];
 
@@ -183,60 +230,94 @@ export function SqlFilesSidebar({ className }: SqlFilesSidebarProps) {
           )}
 
           {!isLoading && !error && files.length > 0 && (
-            <div className={cn("space-y-1", collapsed ? "px-2" : "px-2")} role="list" aria-label={`List of ${files.length} SQL ${files.length === 1 ? 'file' : 'files'}`}>
+            <div className={cn("space-y-1 overflow-x-hidden", collapsed ? "px-2" : "px-2")} role="list" aria-label={`List of ${files.length} SQL ${files.length === 1 ? 'file' : 'files'}`}>
               {files.map((file) => (
-                <button
+                <div
                   key={file.id}
-                  onClick={() => handleFileClick(file.id)}
-                  disabled={parseMutation.isPending}
                   className={cn(
-                    'w-full flex items-center',
+                    'w-full flex items-center group overflow-hidden',
                     'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20',
-                    'active:scale-[0.98] transition-all duration-300 ease-out',
-                    parseMutation.isPending && 'opacity-50 cursor-not-allowed',
-                    collapsed 
-                      ? 'justify-center px-2 py-2 rounded-lg' 
-                      : 'items-start gap-3 px-3 py-2.5 rounded-lg text-left'
+                    'transition-all duration-300 ease-out rounded-lg',
+                    collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2.5 gap-2'
                   )}
-                  title={collapsed ? file.title || `File ${file.id}` : undefined}
-                  aria-label={collapsed 
-                    ? `Load SQL file: ${file.title || `Untitled ${file.id}`}`
-                    : `Load SQL file: ${file.title || `Untitled ${file.id}`}, created ${formatDate(file.createdAt)}`
-                  }
-                  aria-describedby={collapsed ? undefined : `file-${file.id}-date`}
                   role="listitem"
-                  style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
                 >
-                  <FileText 
+                  <button
+                    onClick={() => handleFileClick(file.id)}
+                    disabled={parseMutation.isPending || deletingId === file.id}
                     className={cn(
-                      "shrink-0 text-blue-400 transition-all duration-500 ease-out",
-                      collapsed ? "size-5" : "size-4 mt-0.5"
-                    )} 
-                    aria-hidden="true"
+                      'flex items-center flex-1 min-w-0',
+                      'active:scale-[0.98]',
+                      parseMutation.isPending && 'opacity-50 cursor-not-allowed',
+                      deletingId === file.id && 'opacity-50 cursor-not-allowed',
+                      collapsed 
+                        ? 'justify-center' 
+                        : 'items-start gap-2 text-left'
+                    )}
+                    title={collapsed ? file.title || `File ${file.id}` : file.title || `Untitled ${file.id}`}
+                    aria-label={collapsed 
+                      ? `Load SQL file: ${file.title || `Untitled ${file.id}`}`
+                      : `Load SQL file: ${file.title || `Untitled ${file.id}`}, created ${formatDate(file.createdAt)}`
+                    }
+                    aria-describedby={collapsed ? undefined : `file-${file.id}-date`}
                     style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
-                  />
+                  >
+                    <FileText 
+                      className={cn(
+                        "shrink-0 text-blue-400 transition-all duration-500 ease-out",
+                        collapsed ? "size-5" : "size-4 mt-0.5"
+                      )} 
+                      aria-hidden="true"
+                      style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
+                    />
+                    {!collapsed && (
+                      <div 
+                        className="flex-1 min-w-0 overflow-hidden transition-opacity duration-500 ease-out" 
+                        style={{ 
+                          opacity: collapsed ? 0 : 1,
+                          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      >
+                        <p className="text-sm font-medium text-white truncate">
+                          {file.title || `Untitled ${file.id}`}
+                        </p>
+                        <p className="text-xs text-zinc-300 mt-0.5 truncate" id={`file-${file.id}-date`}>
+                          {formatDate(file.createdAt)}
+                        </p>
+                      </div>
+                    )}
+                  </button>
                   {!collapsed && (
-                    <div 
-                      className="flex-1 min-w-0 overflow-hidden transition-opacity duration-500 ease-out" 
-                      style={{ 
-                        opacity: collapsed ? 0 : 1,
-                        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleDeleteClick(file.id, file.title || `Untitled ${file.id}`, e)}
+                      disabled={deletingId === file.id}
+                      className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg shrink-0"
+                      aria-label={`Delete SQL file: ${file.title || `Untitled ${file.id}`}`}
                     >
-                      <p className="text-sm font-medium text-white truncate">
-                        {file.title || `Untitled ${file.id}`}
-                      </p>
-                      <p className="text-xs text-zinc-300 mt-0.5" id={`file-${file.id}-date`}>
-                        {formatDate(file.createdAt)}
-                      </p>
-                    </div>
+                      {deletingId === file.id ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="size-3.5" />
+                      )}
+                    </Button>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={!!confirmDelete}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        fileName={confirmDelete?.fileName}
+        isLoading={deletingId === confirmDelete?.fileId}
+      />
     </aside>
   );
 }

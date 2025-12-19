@@ -5,7 +5,7 @@
  */
 import { db } from '@/lib/db';
 import { sqlFiles, users } from '@/lib/schema';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 
 type UserUpsertParams = {
   id: string;
@@ -67,7 +67,7 @@ export async function findSqlFileByContent(userId: string, content: string) {
   const [existing] = await db
     .select({ id: sqlFiles.id })
     .from(sqlFiles)
-    .where(and(eq(sqlFiles.userId, userId), eq(sqlFiles.content, content)))
+    .where(and(eq(sqlFiles.userId, userId), eq(sqlFiles.content, content), isNull(sqlFiles.deletedAt)))
     .limit(1);
 
   return existing ?? null;
@@ -82,7 +82,7 @@ export async function listSqlFiles(userId: string) {
       updatedAt: sqlFiles.updatedAt,
     })
     .from(sqlFiles)
-    .where(eq(sqlFiles.userId, userId))
+    .where(and(eq(sqlFiles.userId, userId), isNull(sqlFiles.deletedAt)))
     .orderBy(desc(sqlFiles.createdAt));
 
   return rows;
@@ -98,9 +98,22 @@ export async function getSqlFileById(userId: string, fileId: number) {
       updatedAt: sqlFiles.updatedAt,
     })
     .from(sqlFiles)
-    .where(and(eq(sqlFiles.id, fileId), eq(sqlFiles.userId, userId)))
+    .where(and(eq(sqlFiles.id, fileId), eq(sqlFiles.userId, userId), isNull(sqlFiles.deletedAt)))
     .limit(1);
 
   return file ?? null;
+}
+
+export async function softDeleteSqlFile(userId: string, fileId: number) {
+  const [updated] = await db
+    .update(sqlFiles)
+    .set({
+      deletedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(sqlFiles.id, fileId), eq(sqlFiles.userId, userId), isNull(sqlFiles.deletedAt)))
+    .returning({ id: sqlFiles.id });
+
+  return updated ?? null;
 }
 

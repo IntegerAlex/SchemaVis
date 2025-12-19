@@ -31,6 +31,7 @@ export const sqlFiles = pgTable('sql_files', {
     .references(() => users.id),
   title: text('title'),
   content: text('content').notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
