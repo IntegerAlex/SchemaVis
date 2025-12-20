@@ -11,11 +11,16 @@
     import { useParseSQLContext } from '@/context/parse-sql-context';
     import { cn } from '@/lib/utils';
     import Image from 'next/image';
-    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Github } from 'lucide-react';
+    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Github, Share2, MessageCircle } from 'lucide-react';
     import { ReactFlowProvider } from '@xyflow/react';
     import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
     import { SqlFilesSidebar } from './sql-files-sidebar';
     import { useQueryClient } from '@tanstack/react-query';
+    import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
+    import { ShareDialog } from './share-dialog';
+    import { CommentsPanel } from './comments/comments-panel';
+    import { useOptionalCollaboration } from '@/context/collaboration-context';
+    import type { CommentData } from '@/lib/collaboration/types';
 
     interface VisualizerLayoutProps {
     className?: string;
@@ -28,7 +33,35 @@
     const [selectedFileName, setSelectedFileName] = React.useState<string | null>(null);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isScrolled, setIsScrolled] = React.useState(false);
+    const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
+    const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
     const queryClient = useQueryClient();
+    const collaboration = useOptionalCollaboration();
+    
+    // Placeholder diagram ID - in production, this would come from route params or saved state
+    const currentDiagramId = React.useMemo(() => {
+      // For now, use a static ID or generate one when diagram is loaded
+      return diagram?.id ?? 'temp-diagram';
+    }, [diagram?.id]);
+
+    // Initialize collaboration context with diagram ID
+    React.useEffect(() => {
+      if (collaboration && diagram?.id) {
+        collaboration.setDiagramId(diagram.id);
+      }
+      return () => {
+        if (collaboration) {
+          collaboration.setDiagramId(null);
+        }
+      };
+    }, [diagram?.id, collaboration]);
+
+    // Navigate to comment location on canvas
+    const handleNavigateToComment = React.useCallback((comment: CommentData) => {
+      // Close panel and scroll to comment
+      setIsCommentsPanelOpen(false);
+      // The canvas will handle highlighting the comment
+    }, []);
 
     const navLinks = React.useMemo(
         () => [
@@ -137,6 +170,46 @@
                 </div>
 
                 <div className="hidden md:flex items-center space-x-3">
+                {/* Presence avatars */}
+                <PresenceAvatars />
+                
+                {/* Comments toggle */}
+                <SignedIn>
+                  {diagram && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsCommentsPanelOpen(!isCommentsPanelOpen)}
+                      className={cn(
+                        "h-9 w-9 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg border border-transparent hover:border-white/10",
+                        isCommentsPanelOpen && "bg-white/10 text-white border-white/10"
+                      )}
+                      aria-label="Toggle comments"
+                    >
+                      <MessageCircle className="size-4" />
+                      {collaboration && collaboration.comments.length > 0 && (
+                        <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-[10px] text-white">
+                          {collaboration.comments.filter(c => !c.resolved && !c.parentId).length}
+                        </span>
+                      )}
+                    </Button>
+                  )}
+                </SignedIn>
+
+                {/* Share button */}
+                <SignedIn>
+                  {diagram && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => setIsShareDialogOpen(true)}
+                      className="h-9 px-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg border border-transparent hover:border-white/10"
+                    >
+                      <Share2 className="size-4 mr-2" />
+                      Share
+                    </Button>
+                  )}
+                </SignedIn>
+
                 <Button
                     onClick={handleUploadClick}
                     disabled={parseMutation.isPending}
@@ -286,12 +359,39 @@
                 </div>
                 </div>
             ) : (
-                <ChartCanvas diagram={diagram} />
+                <ChartCanvas 
+                  diagram={diagram} 
+                  readOnly={collaboration ? !collaboration.canEdit : false}
+                />
             )}
             </ReactFlowProvider>
             </div>
           </div>
         </div>
+
+        {/* Share Dialog */}
+        <ShareDialog
+          isOpen={isShareDialogOpen}
+          onClose={() => setIsShareDialogOpen(false)}
+          diagramId={currentDiagramId}
+          diagramName={diagram?.name ?? 'Untitled Diagram'}
+          diagramContent={diagram ? {
+            tables: diagram.tables,
+            relationships: diagram.relationships,
+            dependencies: diagram.dependencies,
+            areas: diagram.areas,
+            customTypes: diagram.customTypes,
+            notes: diagram.notes,
+          } : undefined}
+          databaseType={diagram?.databaseType}
+        />
+
+        {/* Comments Panel */}
+        <CommentsPanel
+          isOpen={isCommentsPanelOpen}
+          onClose={() => setIsCommentsPanelOpen(false)}
+          onNavigateToComment={handleNavigateToComment}
+        />
         </div>
     );
     }
