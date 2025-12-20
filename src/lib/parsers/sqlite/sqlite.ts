@@ -213,8 +213,9 @@ function parseCreateTableStatementsDirectly(sqlContent: string): {
     // Match all CREATE TABLE statements including those without column definitions
     // Improved regex to handle quoted table names with spaces
     // Pattern matches: CREATE TABLE [IF NOT EXISTS] ["name"|name] (...)
+    // Using [\s\S] instead of . with s flag for ES2017 compatibility
     const createTableRegex =
-        /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:(["'`])([^"'`]+)\1|(\w+))\s*\(([^;]+?)\)\s*;/gis;
+        /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:(["'`])([^"'`]+)\1|(\w+))\s*\(([^;]+?)\)\s*;/gi;
     let match;
 
     while ((match = createTableRegex.exec(cleanedSQL)) !== null) {

@@ -154,8 +154,9 @@ function parseAlterTableAddConstraint(statements: string[]): SQLForeignKey[] {
 
     // Regular expressions to extract information from ALTER TABLE statements
     // Handle multi-line ALTER TABLE statements
+    // Removed 's' flag for ES2017 compatibility - pattern already handles newlines via \s
     const alterTableRegex =
-        /ALTER\s+TABLE\s+\[?([^\]]*)\]?\.?\[?([^\]]*)\]?\s+(?:WITH\s+CHECK\s+)?ADD\s+CONSTRAINT\s+\[?([^\]]*)\]?\s+FOREIGN\s+KEY\s*\(\[?([^\]]*)\]?\)\s*REFERENCES\s+\[?([^\]]*)\]?\.?\[?([^\]]*)\]?\s*\(\[?([^\]]*)\]?\)/is;
+        /ALTER\s+TABLE\s+\[?([^\]]*)\]?\.?\[?([^\]]*)\]?\s+(?:WITH\s+CHECK\s+)?ADD\s+CONSTRAINT\s+\[?([^\]]*)\]?\s+FOREIGN\s+KEY\s*\(\[?([^\]]*)\]?\)\s*REFERENCES\s+\[?([^\]]*)\]?\.?\[?([^\]]*)\]?\s*\(\[?([^\]]*)\]?\)/i;
 
     for (const stmt of statements) {
         const match = stmt.match(alterTableRegex);

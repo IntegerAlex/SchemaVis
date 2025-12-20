@@ -17,6 +17,7 @@ import {
   Trash2,
   RefreshCw,
   Loader2,
+  Search,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -44,19 +45,31 @@ interface Permission {
   userId: string;
   userName: string | null;
   userEmail: string | null;
+  userUsername: string | null;
   userImageUrl: string | null;
   role: 'owner' | 'editor' | 'viewer';
   createdAt: string;
 }
 
+interface SearchUser {
+  id: string;
+  name: string | null;
+  username: string | null;
+  imageUrl: string | null;
+}
+
 export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramContent, databaseType }: ShareDialogProps) {
   const [copied, setCopied] = React.useState(false);
-  const [inviteEmail, setInviteEmail] = React.useState('');
+  const [inviteUsername, setInviteUsername] = React.useState('');
   const [inviteRole, setInviteRole] = React.useState<'editor' | 'viewer'>('viewer');
   const [inviteError, setInviteError] = React.useState<string | null>(null);
   const [expiryDate, setExpiryDate] = React.useState<string>('');
   const [expiryTime, setExpiryTime] = React.useState<string>('');
   const [hasExpiry, setHasExpiry] = React.useState(false);
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = React.useState(-1);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const suggestionsRef = React.useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   // Fetch share settings
@@ -138,11 +151,11 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
 
   // Add permission mutation
   const addPermissionMutation = useMutation({
-    mutationFn: async ({ email, role }: { email: string; role: 'editor' | 'viewer' }) => {
+    mutationFn: async ({ username, role }: { username: string; role: 'editor' | 'viewer' }) => {
       const response = await fetch(`/api/diagrams/${diagramId}/permissions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role }),
+        body: JSON.stringify({ username, role }),
       });
       if (!response.ok) {
         const error = await response.json();
@@ -152,7 +165,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['diagram-permissions', diagramId] });
-      setInviteEmail('');
+      setInviteUsername('');
       setInviteError(null);
     },
     onError: (error: Error) => {
@@ -174,6 +187,32 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
       queryClient.invalidateQueries({ queryKey: ['diagram-permissions', diagramId] });
     },
   });
+
+  // Search users query (debounced)
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(inviteUsername);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [inviteUsername]);
+
+  const { data: searchResults, isLoading: isSearching } = useQuery<{ users: SearchUser[] }>({
+    queryKey: ['user-search', searchQuery],
+    queryFn: async () => {
+      if (!searchQuery || searchQuery.length < 2) {
+        return { users: [] };
+      }
+      const response = await fetch(`/api/user/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) throw new Error('Failed to search users');
+      return response.json();
+    },
+    enabled: searchQuery.length >= 2,
+    staleTime: 5000,
+  });
+
+  const suggestions = searchResults?.users ?? [];
 
   // Update permission role mutation
   const updatePermissionMutation = useMutation({
@@ -202,12 +241,62 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
   const handleInvite = React.useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (!inviteEmail.trim()) return;
+      if (!inviteUsername.trim()) return;
       setInviteError(null);
-      addPermissionMutation.mutate({ email: inviteEmail.trim(), role: inviteRole });
+      setShowSuggestions(false);
+      addPermissionMutation.mutate({ username: inviteUsername.trim(), role: inviteRole });
     },
-    [inviteEmail, inviteRole, addPermissionMutation]
+    [inviteUsername, inviteRole, addPermissionMutation]
   );
+
+  const handleSelectSuggestion = React.useCallback((user: SearchUser) => {
+    if (user.username) {
+      setInviteUsername(user.username);
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+      inputRef.current?.focus();
+    }
+  }, []);
+
+  // Handle keyboard navigation
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSuggestionIndex((prev) => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === 'Enter' && selectedSuggestionIndex >= 0) {
+      e.preventDefault();
+      handleSelectSuggestion(suggestions[selectedSuggestionIndex]);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }
+  }, [showSuggestions, suggestions, selectedSuggestionIndex, handleSelectSuggestion]);
+
+  // Close suggestions when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    if (showSuggestions) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showSuggestions]);
 
   const permissions = permissionsData?.permissions ?? [];
 
@@ -390,7 +479,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                         onClick={() => updateShareMutation.mutate({ regenerateToken: true })}
                         disabled={updateShareMutation.isPending}
                         className="shrink-0 h-9 w-9 text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                        aria-label="Generate new link"
+                        aria-label="Generate link"
                       >
                         {updateShareMutation.isPending ? (
                           <Loader2 className="size-4 animate-spin" />
@@ -427,13 +516,92 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                 </div>
 
                 <form onSubmit={handleInvite} className="flex items-center gap-2">
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="relative flex-1">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none z-10">
+                      @
+                    </div>
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inviteUsername}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        // Remove @ if user types it
+                        if (value.startsWith('@')) {
+                          value = value.slice(1);
+                        }
+                        setInviteUsername(value);
+                        setShowSuggestions(value.length >= 2);
+                        setSelectedSuggestionIndex(-1);
+                      }}
+                      onFocus={() => {
+                        if (inviteUsername.length >= 2) {
+                          setShowSuggestions(true);
+                        }
+                      }}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Search username..."
+                      className="w-full pl-8 pr-10 py-2 bg-slate-800 border border-white/10 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {isSearching && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="size-4 text-zinc-400 animate-spin" />
+                      </div>
+                    )}
+                    {!isSearching && inviteUsername.length >= 2 && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Search className="size-4 text-zinc-400" />
+                      </div>
+                    )}
+                    
+                    {/* Suggestions dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div
+                        ref={suggestionsRef}
+                        className="absolute z-50 w-full mt-1 bg-slate-800 border border-white/10 rounded-lg shadow-lg max-h-60 overflow-auto"
+                      >
+                        {suggestions.map((user, index) => (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(user)}
+                            className={cn(
+                              'w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/5 transition-colors',
+                              index === selectedSuggestionIndex && 'bg-white/10'
+                            )}
+                          >
+                            {user.imageUrl ? (
+                              <img
+                                src={user.imageUrl}
+                                alt={user.name || user.username || ''}
+                                className="size-8 rounded-full"
+                              />
+                            ) : (
+                              <div className="size-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-medium text-white">
+                                {(user.name || user.username || '??').slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-white truncate">
+                                {user.name || 'Unknown'}
+                              </p>
+                              <p className="text-xs text-zinc-400 truncate">
+                                @{user.username}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {showSuggestions && !isSearching && inviteUsername.length >= 2 && suggestions.length === 0 && (
+                      <div
+                        ref={suggestionsRef}
+                        className="absolute z-50 w-full mt-1 bg-slate-800 border border-white/10 rounded-lg shadow-lg px-3 py-2"
+                      >
+                        <p className="text-sm text-zinc-400">No users found</p>
+                      </div>
+                    )}
+                  </div>
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}
@@ -444,7 +612,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                   </select>
                   <Button
                     type="submit"
-                    disabled={!inviteEmail.trim() || addPermissionMutation.isPending}
+                    disabled={!inviteUsername.trim() || addPermissionMutation.isPending}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4"
                   >
                     {addPermissionMutation.isPending ? (
@@ -479,12 +647,12 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                             {permission.userImageUrl ? (
                               <img
                                 src={permission.userImageUrl}
-                                alt={permission.userName || permission.userEmail || ''}
+                                alt={permission.userName || permission.userUsername || ''}
                                 className="size-8 rounded-full"
                               />
                             ) : (
                               <div className="size-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-medium text-white">
-                                {(permission.userName || permission.userEmail || '??').slice(0, 2).toUpperCase()}
+                                {(permission.userName || permission.userUsername || '??').slice(0, 2).toUpperCase()}
                               </div>
                             )}
                             <div>
@@ -492,7 +660,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                                 {permission.userName || 'Unknown'}
                               </p>
                               <p className="text-xs text-zinc-400">
-                                {permission.userEmail}
+                                {permission.userUsername ? `@${permission.userUsername}` : permission.userEmail || 'No username'}
                               </p>
                             </div>
                           </div>
@@ -520,7 +688,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                                   onClick={() => removePermissionMutation.mutate(permission.userId)}
                                   disabled={removePermissionMutation.isPending}
                                   className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-900/20"
-                                  aria-label={`Remove ${permission.userName || permission.userEmail}`}
+                                  aria-label={`Remove ${permission.userName || permission.userUsername || permission.userEmail}`}
                                 >
                                   <Trash2 className="size-3.5" />
                                 </Button>

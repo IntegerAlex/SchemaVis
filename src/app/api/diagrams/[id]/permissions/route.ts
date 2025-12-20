@@ -13,10 +13,11 @@ import {
   listPermissions,
   checkPermission,
   findUserByEmail,
+  findUserByUsername,
 } from '@/lib/repositories/diagrams';
 
 const addPermissionSchema = z.object({
-  email: z.string().email(),
+  username: z.string().min(1, 'Username is required'),
   role: z.enum(['editor', 'viewer']),
 });
 
@@ -91,11 +92,11 @@ export async function POST(
     );
   }
 
-  // Find user by email
-  const targetUser = await findUserByEmail(parsed.data.email);
+  // Find user by username
+  const targetUser = await findUserByUsername(parsed.data.username);
   if (!targetUser) {
     return NextResponse.json(
-      { error: 'User not found. They need to sign up first.' },
+      { error: 'User not found. They need to sign up and set a username first.' },
       { status: 404 }
     );
   }
@@ -118,6 +119,7 @@ export async function POST(
       ...permission,
       userName: targetUser.name,
       userEmail: targetUser.email,
+      userUsername: targetUser.username,
       userImageUrl: targetUser.imageUrl,
     },
   }, { status: 201 });

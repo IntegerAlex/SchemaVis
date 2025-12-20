@@ -5,7 +5,7 @@
  */
 import { db } from '@/lib/db';
 import { sqlFiles, users } from '@/lib/schema';
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, isNull, ilike, sql } from 'drizzle-orm';
 
 type UserUpsertParams = {
   id: string;
@@ -97,6 +97,31 @@ export async function updateUsername(userId: string, username: string) {
     });
 
   return updated ?? null;
+}
+
+/**
+ * Search users by username (case-insensitive, partial match)
+ */
+export async function searchUsersByUsername(query: string, limit: number = 10) {
+  const searchPattern = `%${query.toLowerCase()}%`;
+  
+  const results = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      username: users.username,
+      imageUrl: users.imageUrl,
+    })
+    .from(users)
+    .where(
+      and(
+        ilike(users.username, searchPattern),
+        sql`${users.username} IS NOT NULL`
+      )
+    )
+    .limit(limit);
+
+  return results;
 }
 
 export async function createSqlFile(params: {

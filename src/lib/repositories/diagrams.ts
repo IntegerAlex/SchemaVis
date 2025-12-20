@@ -335,6 +335,7 @@ export async function listPermissions(diagramId: string) {
       userId: diagramPermissions.userId,
       userName: users.name,
       userEmail: users.email,
+      userUsername: users.username,
       userImageUrl: users.imageUrl,
       role: diagramPermissions.role,
       createdAt: diagramPermissions.createdAt,
@@ -353,10 +354,30 @@ export async function findUserByEmail(email: string) {
       id: users.id,
       name: users.name,
       email: users.email,
+      username: users.username,
       imageUrl: users.imageUrl,
     })
     .from(users)
     .where(eq(users.email, email))
+    .limit(1);
+
+  return user ?? null;
+}
+
+export async function findUserByUsername(username: string) {
+  // Normalize username (remove @ prefix if present, lowercase)
+  const normalized = username.startsWith('@') ? username.slice(1).toLowerCase() : username.toLowerCase();
+  
+  const [user] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      username: users.username,
+      imageUrl: users.imageUrl,
+    })
+    .from(users)
+    .where(eq(users.username, normalized))
     .limit(1);
 
   return user ?? null;
