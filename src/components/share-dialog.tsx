@@ -69,6 +69,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
   const [hasExpiry, setHasExpiry] = React.useState(false);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = React.useState(-1);
+  const [deletePermissionTarget, setDeletePermissionTarget] = React.useState<{ userId: string; userName: string | null } | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const suggestionsRef = React.useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
