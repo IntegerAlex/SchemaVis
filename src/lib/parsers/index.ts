@@ -2,6 +2,10 @@ import { DatabaseType } from '../domain/database-type';
 import type { Diagram } from '../domain/diagram';
 import { fromPostgres } from './postgresql/postgresql';
 import { fromPostgresDump } from './postgresql/postgresql-dump';
+import { fromMySQL, isMySQLFormat } from './mysql/mysql';
+import { fromSQLite } from './sqlite/sqlite';
+import { fromOracle, isOracleFormat } from './oracle/oracle';
+import { fromSQLServer } from './sqlserver/sqlserver';
 import type { SQLParserResult } from './common';
 import { convertToChartDBDiagram } from './common';
 import { adjustTablePositions } from '../domain/db-table';
@@ -42,7 +46,78 @@ function isPgDumpFormat(sqlContent: string): boolean {
 }
 
 /**
- * Auto-detect database type from SQL content (PostgreSQL only)
+ * Detect if SQL content is from SQL Server DDL format
+ * @param sqlContent SQL content as string
+ * @returns boolean indicating if the SQL is likely from SQL Server
+ */
+function isSQLServerFormat(sqlContent: string): boolean {
+    // SQL Server output often contains specific markers
+    const sqlServerMarkers = [
+        'SET ANSI_NULLS ON',
+        'SET QUOTED_IDENTIFIER ON',
+        'SET ANSI_PADDING ON',
+        'CREATE PROCEDURE',
+        'EXEC sys.sp_',
+        'EXECUTE sys.sp_',
+        '[dbo].',
+        'IDENTITY(',
+        'NVARCHAR',
+        'UNIQUEIDENTIFIER',
+        'ALTER TABLE [',
+        'CREATE TABLE [dbo]',
+        'CREATE INDEX [dbo_',
+        'datetime2',
+    ];
+
+    // Check for specific SQL Server patterns
+    for (const marker of sqlServerMarkers) {
+        if (sqlContent.includes(marker)) {
+            return true;
+        }
+    }
+
+    // Also check for brackets used in SQL Server syntax - [dbo].[TableName]
+    if (sqlContent.match(/\[[^\]]+\]\.\[[^\]]+\]/)) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Detect if SQL content is from SQLite format
+ * @param sqlContent SQL content as string
+ * @returns boolean indicating if the SQL is likely from SQLite
+ */
+function isSQLiteFormat(sqlContent: string): boolean {
+    // SQLite output often contains specific markers
+    // Use more specific markers to avoid false positives with PostgreSQL
+    const sqliteMarkers = [
+        'PRAGMA',
+        'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'DEFAULT (datetime(',
+        'sqlite_sequence',
+    ];
+
+    // Check for specific SQLite patterns
+    for (const marker of sqliteMarkers) {
+        if (sqlContent.includes(marker)) {
+            return true;
+        }
+    }
+
+    // Check for SQLite-specific CREATE TRIGGER pattern (more specific than just "CREATE TRIGGER")
+    // SQLite triggers often have specific syntax
+    if (sqlContent.includes('CREATE TRIGGER') && 
+        (sqlContent.includes('sqlite_') || sqlContent.includes('INTEGER PRIMARY KEY'))) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Auto-detect database type from SQL content
  * @param sqlContent SQL content as string
  * @returns Detected database type or null if can't determine
  */
@@ -52,18 +127,49 @@ export function detectDatabaseType(sqlContent: string): DatabaseType | null {
         return DatabaseType.POSTGRESQL;
     }
 
-    // Look for database-specific keywords
+    // Check for SQL Server format
+    if (isSQLServerFormat(sqlContent)) {
+        return DatabaseType.SQL_SERVER;
+    }
+
+    // Check for MySQL dump format
+    if (isMySQLFormat(sqlContent)) {
+        return DatabaseType.MYSQL;
+    }
+
+    // Check for Oracle format
+    if (isOracleFormat(sqlContent)) {
+        return DatabaseType.ORACLE;
+    }
+
+    // Look for database-specific keywords (check PostgreSQL before SQLite to avoid false positives)
     if (
         sqlContent.includes('SERIAL PRIMARY KEY') ||
         sqlContent.includes('CREATE EXTENSION') ||
         sqlContent.includes('WITH (OIDS') ||
-        sqlContent.includes('RETURNS SETOF')
+        sqlContent.includes('RETURNS SETOF') ||
+        sqlContent.includes('DO $$') ||
+        sqlContent.includes('::') ||
+        sqlContent.includes('pg_catalog')
     ) {
         return DatabaseType.POSTGRESQL;
     }
 
-    // Default to PostgreSQL if we can't determine
-    return DatabaseType.POSTGRESQL;
+    if (
+        sqlContent.includes('AUTO_INCREMENT') ||
+        sqlContent.includes('ENGINE=InnoDB') ||
+        sqlContent.includes('DEFINER=')
+    ) {
+        return DatabaseType.MYSQL;
+    }
+
+    // Check for SQLite format (after PostgreSQL keywords to avoid false positives from generic markers)
+    if (isSQLiteFormat(sqlContent)) {
+        return DatabaseType.SQLITE;
+    }
+
+    // Could not determine the database type
+    return null;
 }
 
 /**

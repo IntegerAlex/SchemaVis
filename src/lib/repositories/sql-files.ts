@@ -11,6 +11,7 @@ type UserUpsertParams = {
   id: string;
   email?: string | null;
   name?: string | null;
+  username?: string | null;
   imageUrl?: string | null;
   publicMetadata?: Record<string, unknown> | null;
   privateMetadata?: Record<string, unknown> | null;
@@ -18,13 +19,14 @@ type UserUpsertParams = {
 };
 
 export async function ensureUser(params: UserUpsertParams) {
-  const { id, email, name, imageUrl, publicMetadata, privateMetadata, unsafeMetadata } = params;
+  const { id, email, name, username, imageUrl, publicMetadata, privateMetadata, unsafeMetadata } = params;
   await db
     .insert(users)
     .values({
       id,
       email: email ?? null,
       name: name ?? null,
+      username: username ?? null,
       imageUrl: imageUrl ?? null,
       publicMetadata: publicMetadata ?? null,
       privateMetadata: privateMetadata ?? null,
@@ -35,6 +37,8 @@ export async function ensureUser(params: UserUpsertParams) {
       set: {
         email: email ?? null,
         name: name ?? null,
+        // Only update username if provided (don't overwrite existing username with null)
+        ...(username !== undefined && { username: username ?? null }),
         imageUrl: imageUrl ?? null,
         publicMetadata: publicMetadata ?? null,
         privateMetadata: privateMetadata ?? null,
@@ -42,6 +46,57 @@ export async function ensureUser(params: UserUpsertParams) {
         updatedAt: new Date(),
       },
     });
+}
+
+/**
+ * Get user by ID
+ */
+export async function getUserById(userId: string) {
+  const [user] = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      username: users.username,
+      imageUrl: users.imageUrl,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return user ?? null;
+}
+
+/**
+ * Check if username is available
+ */
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  const [existing] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1);
+
+  return !existing;
+}
+
+/**
+ * Update user username
+ */
+export async function updateUsername(userId: string, username: string) {
+  const [updated] = await db
+    .update(users)
+    .set({
+      username,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      username: users.username,
+    });
+
+  return updated ?? null;
 }
 
 export async function createSqlFile(params: {

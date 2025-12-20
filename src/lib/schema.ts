@@ -24,6 +24,7 @@ export const users = pgTable('users', {
   id: varchar('id', { length: 128 }).primaryKey(),
   email: text('email'),
   name: text('name'),
+  username: varchar('username', { length: 50 }).unique(),
   imageUrl: text('image_url'),
   publicMetadata: jsonb('public_metadata').$type<Record<string, unknown> | null>(),
   privateMetadata: jsonb('private_metadata').$type<Record<string, unknown> | null>(),
