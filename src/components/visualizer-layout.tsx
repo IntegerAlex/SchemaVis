@@ -45,16 +45,27 @@
     }, [diagram?.id]);
 
     // Initialize collaboration context with diagram ID
+    // Use ref to track previous diagram ID to prevent unnecessary updates
+    const prevDiagramIdRef = React.useRef<string | null>(null);
     React.useEffect(() => {
-      if (collaboration && diagram?.id) {
-        collaboration.setDiagramId(diagram.id);
+      if (!collaboration?.setDiagramId) return;
+      
+      const diagramId = diagram?.id ?? null;
+      
+      // Only update if diagram ID actually changed
+      if (prevDiagramIdRef.current !== diagramId) {
+        prevDiagramIdRef.current = diagramId;
+        collaboration.setDiagramId(diagramId);
       }
+      
       return () => {
-        if (collaboration) {
+        // Only clear on unmount, not on every change
+        if (prevDiagramIdRef.current !== null) {
+          prevDiagramIdRef.current = null;
           collaboration.setDiagramId(null);
         }
       };
-    }, [diagram?.id, collaboration]);
+    }, [diagram?.id, collaboration?.setDiagramId]);
 
     // Navigate to comment location on canvas
     const handleNavigateToComment = React.useCallback((comment: CommentData) => {
@@ -170,31 +181,7 @@
                 </div>
 
                 <div className="hidden md:flex items-center space-x-3">
-                {/* Presence avatars */}
-                <PresenceAvatars />
-                
-                {/* Comments toggle */}
-                <SignedIn>
-                  {diagram && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsCommentsPanelOpen(!isCommentsPanelOpen)}
-                      className={cn(
-                        "h-9 w-9 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg border border-transparent hover:border-white/10",
-                        isCommentsPanelOpen && "bg-white/10 text-white border-white/10"
-                      )}
-                      aria-label="Toggle comments"
-                    >
-                      <MessageCircle className="size-4" />
-                      {collaboration && collaboration.comments.length > 0 && (
-                        <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-[10px] text-white">
-                          {collaboration.comments.filter(c => !c.resolved && !c.parentId).length}
-                        </span>
-                      )}
-                    </Button>
-                  )}
-                </SignedIn>
+                {/* Collaboration features disabled */}
 
                 {/* Share button */}
                 <SignedIn>
@@ -241,7 +228,7 @@
                     className="hidden"
                 />
                 <SignedIn>
-                    <UserButton afterSignOutUrl="/" />
+                    <UserButton afterSignOutUrl="/app" />
                 </SignedIn>
                 </div>
 
@@ -312,7 +299,7 @@
                     />
                     <SignedIn>
                         <div className="flex justify-center pt-2">
-                        <UserButton afterSignOutUrl="/" />
+                        <UserButton afterSignOutUrl="/app" />
                         </div>
                     </SignedIn>
                     </div>
@@ -361,7 +348,7 @@
             ) : (
                 <ChartCanvas 
                   diagram={diagram} 
-                  readOnly={collaboration ? !collaboration.canEdit : false}
+                  readOnly={false}
                 />
             )}
             </ReactFlowProvider>

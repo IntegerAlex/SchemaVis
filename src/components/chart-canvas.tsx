@@ -48,17 +48,23 @@ export function ChartCanvas({
   readOnly = false,
   onDiagramChange,
 }: ChartCanvasProps) {
-  const { fitView, getNode } = useReactFlow();
+  const { fitView, getNode, screenToFlowPosition } = useReactFlow();
   const viewport = useViewport();
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
   const [isAddingComment, setIsAddingComment] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const sendCursorMoveRef = useRef<((x: number, y: number) => void) | null>(null);
   
   // Collaboration context
   const collaboration = useOptionalCollaboration();
   const canEdit = !readOnly && (collaboration?.canEdit ?? true);
+  
+  // Update ref when sendCursorMove changes
+  useEffect(() => {
+    sendCursorMoveRef.current = collaboration?.sendCursorMove ?? null;
+  }, [collaboration?.sendCursorMove]);
   
   // Note: Remote node positions not tracked with polling (would require frequent polling)
 
@@ -94,21 +100,33 @@ export function ChartCanvas({
   // Node positions are synced when drag ends via diagram updates
 
   // Track cursor movement for collaboration
+  // Store screenToFlowPosition in ref to avoid re-attaching listeners
+  const screenToFlowPositionRef = useRef(screenToFlowPosition);
   useEffect(() => {
-    if (!collaboration || !containerRef.current) return;
+    screenToFlowPositionRef.current = screenToFlowPosition;
+  }, [screenToFlowPosition]);
+
+  useEffect(() => {
+    if (!sendCursorMoveRef.current || !containerRef.current) return;
 
     const container = containerRef.current;
+    
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      // Convert to canvas coordinates
-      const x = (e.clientX - rect.left - viewport.x) / viewport.zoom;
-      const y = (e.clientY - rect.top - viewport.y) / viewport.zoom;
-      collaboration.sendCursorMove(x, y);
+      if (!sendCursorMoveRef.current) return;
+      
+      // Use ReactFlow's built-in coordinate transformation
+      // screenToFlowPosition converts screen pixel coordinates to flow coordinates
+      const flowPosition = screenToFlowPositionRef.current({
+        x: e.clientX,
+        y: e.clientY,
+      });
+      
+      sendCursorMoveRef.current(flowPosition.x, flowPosition.y);
     };
 
-    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => container.removeEventListener('mousemove', handleMouseMove);
-  }, [collaboration, viewport]);
+  }, []); // Empty deps - screenToFlowPosition accessed via ref, sendCursorMoveRef is stable
 
   const tableNodes: Node[] = useMemo(() => {
     if (!diagram || !diagram.tables) {
@@ -159,11 +177,13 @@ export function ChartCanvas({
   // Keep nodes/edges in sync with computed values (expansion, highlighting, relationships)
   useEffect(() => {
     setNodes(tableNodes);
-  }, [tableNodes, setNodes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableNodes]); // setNodes is stable from useNodesState
 
   useEffect(() => {
     setEdges(relationshipEdges);
-  }, [relationshipEdges, setEdges]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relationshipEdges]); // setEdges is stable from useEdgesState
 
   if (!diagram) {
     return (
@@ -172,6 +192,17 @@ export function ChartCanvas({
       </div>
     );
   }
+
+  // Store collaboration functions in refs to prevent re-renders
+  const sendNodeDragRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
+  const sendNodeDragEndRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
+  const sendCommentCreateRef = useRef<((content: string, x: number, y: number) => void) | null>(null);
+
+  useEffect(() => {
+    sendNodeDragRef.current = collaboration?.sendNodeDrag ?? null;
+    sendNodeDragEndRef.current = collaboration?.sendNodeDragEnd ?? null;
+    sendCommentCreateRef.current = collaboration?.sendCommentCreate ?? null;
+  }, [collaboration?.sendNodeDrag, collaboration?.sendNodeDragEnd, collaboration?.sendCommentCreate]);
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -191,35 +222,35 @@ export function ChartCanvas({
       setSelectedCommentId(null);
 
       // Handle adding comments
-      if (isAddingComment && collaboration) {
+      if (isAddingComment && sendCommentCreateRef.current) {
         const rect = (event.target as HTMLElement).getBoundingClientRect();
         const x = (event.clientX - rect.left - viewport.x) / viewport.zoom;
         const y = (event.clientY - rect.top - viewport.y) / viewport.zoom;
 
         const content = prompt('Enter your comment:');
         if (content?.trim()) {
-          collaboration.sendCommentCreate(content.trim(), x, y);
+          sendCommentCreateRef.current(content.trim(), x, y);
         }
         setIsAddingComment(false);
       }
     },
-    [isAddingComment, collaboration, viewport]
+    [isAddingComment, viewport]
   );
 
   // Handle node drag for collaboration
   const handleNodeDrag = useCallback(
     (_event: React.MouseEvent, node: Node) => {
-      if (canEdit && collaboration) {
-        collaboration.sendNodeDrag(node.id, node.position.x, node.position.y);
+      if (canEdit && sendNodeDragRef.current) {
+        sendNodeDragRef.current(node.id, node.position.x, node.position.y);
       }
     },
-    [canEdit, collaboration]
+    [canEdit]
   );
 
   const handleNodeDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
-      if (canEdit && collaboration) {
-        collaboration.sendNodeDragEnd(node.id, node.position.x, node.position.y);
+      if (canEdit && sendNodeDragEndRef.current) {
+        sendNodeDragEndRef.current(node.id, node.position.x, node.position.y);
       }
 
       // Update local diagram
@@ -230,7 +261,7 @@ export function ChartCanvas({
         onDiagramChange({ ...diagram, tables: updatedTables });
       }
     },
-    [canEdit, collaboration, diagram, onDiagramChange]
+    [canEdit, diagram, onDiagramChange]
   );
 
   // Get comments for the selected comment thread
@@ -258,14 +289,14 @@ export function ChartCanvas({
         fitView
         minZoom={0.1}
         maxZoom={2}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+        defaultViewport={useMemo(() => ({ x: 0, y: 0, zoom: 0.8 }), [])}
         className="w-full h-full"
         nodesDraggable={canEdit}
         nodesConnectable={false}
         elementsSelectable={true}
-        proOptions={{ hideAttribution: true }}
+        proOptions={useMemo(() => ({ hideAttribution: true }), [])}
         onPaneClick={handlePaneClick}
-        style={{ cursor: isAddingComment ? 'crosshair' : undefined }}
+        style={useMemo(() => ({ cursor: isAddingComment ? 'crosshair' : undefined }), [isAddingComment])}
       >
         <Background />
         {showControls && (
@@ -291,7 +322,7 @@ export function ChartCanvas({
 
       {/* Remote cursors overlay */}
       {collaboration && (
-        <ReactFlowCursors viewport={viewport} />
+        <ReactFlowCursors />
       )}
 
       {/* Comment pins overlay */}

@@ -6,6 +6,7 @@
 'use client';
 
 import * as React from 'react';
+import { useReactFlow } from '@xyflow/react';
 import { useOptionalCollaboration } from '@/context/collaboration-context';
 import type { CursorPosition } from '@/lib/collaboration/types';
 
@@ -130,12 +131,9 @@ export function useCursorTracking(
 }
 
 // Cursor with ReactFlow viewport transformation
-interface ReactFlowCursorsProps {
-  viewport: { x: number; y: number; zoom: number };
-}
-
-export function ReactFlowCursors({ viewport }: ReactFlowCursorsProps) {
+export function ReactFlowCursors() {
   const collaboration = useOptionalCollaboration();
+  const { flowToScreenPosition } = useReactFlow();
 
   if (!collaboration) {
     return null;
@@ -154,21 +152,32 @@ export function ReactFlowCursors({ viewport }: ReactFlowCursorsProps) {
     return map;
   }, [activeUsers, currentUser]);
 
+  // Filter out current user's cursor (should already be filtered in the map, but double-check)
+  const otherUsersCursors = Array.from(cursors.entries()).filter(
+    ([userId]) => userId !== currentUser?.id
+  );
+
+  if (otherUsersCursors.length === 0) {
+    return null;
+  }
+
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden z-50">
-      {Array.from(cursors.entries()).map(([userId, cursor]) => {
-        if (userId === currentUser?.id) return null;
+      {otherUsersCursors.map(([userId, cursor]) => {
         const user = userMap.get(userId);
         if (!user) return null;
 
-        // Transform cursor position based on viewport
-        const transformedX = cursor.x * viewport.zoom + viewport.x;
-        const transformedY = cursor.y * viewport.zoom + viewport.y;
+        // Use ReactFlow's built-in coordinate transformation
+        // flowToScreenPosition converts flow coordinates to screen pixel coordinates
+        const screenPosition = flowToScreenPosition({
+          x: cursor.x,
+          y: cursor.y,
+        });
 
         return (
           <RemoteCursor
             key={userId}
-            cursor={{ ...cursor, x: transformedX, y: transformedY }}
+            cursor={{ ...cursor, x: screenPosition.x, y: screenPosition.y }}
             userName={user.name}
           />
         );

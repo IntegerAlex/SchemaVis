@@ -6,6 +6,7 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
 import { useCollaboration } from '@/hooks/use-collaboration';
 import type {
   CollaboratorInfo,
@@ -62,10 +63,14 @@ interface CollaborationProviderProps {
 }
 
 export function CollaborationProvider({ children }: CollaborationProviderProps) {
+  const pathname = usePathname();
+  
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // This ensures hooks are called in the same order on every render
   const [diagramId, setDiagramId] = React.useState<string | null>(null);
   const [comments, setComments] = React.useState<CommentData[]>([]);
   
-  // External event handlers
+  // External event handlers - must be called unconditionally
   const [onDiagramUpdateHandler, setOnDiagramUpdateHandler] = React.useState<
     ((content: Record<string, unknown>, version: number, userId: string) => void) | undefined
   >();
@@ -78,7 +83,11 @@ export function CollaborationProvider({ children }: CollaborationProviderProps) 
   
   const queryClient = useQueryClient();
 
-  // Fetch comments for the diagram
+  // Disable collaboration for shared diagram routes - skip all collaboration features
+  const isSharedRoute = pathname?.startsWith('/share/');
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Fetch comments for the diagram - disabled for shared routes
   const { data: commentsData, isLoading: isLoadingComments, refetch: refetchComments } = useQuery({
     queryKey: ['diagram-comments', diagramId],
     queryFn: async () => {
@@ -87,7 +96,7 @@ export function CollaborationProvider({ children }: CollaborationProviderProps) 
       if (!response.ok) throw new Error('Failed to fetch comments');
       return response.json();
     },
-    enabled: !!diagramId,
+    enabled: !!diagramId && !isSharedRoute, // Disable for shared routes
   });
 
   // Update comments state when data changes
@@ -114,7 +123,7 @@ export function CollaborationProvider({ children }: CollaborationProviderProps) 
 
   const collaboration = useCollaboration({
     diagramId,
-    enabled: !!diagramId,
+    enabled: !!diagramId && !isSharedRoute, // Disable for shared routes
     onDiagramUpdate: onDiagramUpdateHandler,
     onNodeDrag: onNodeDragHandler,
     onNodeDragEnd: onNodeDragEndHandler,
@@ -127,6 +136,42 @@ export function CollaborationProvider({ children }: CollaborationProviderProps) 
     refetchComments();
   }, [refetchComments]);
 
+  // Now we can do conditional returns after all hooks are called
+  if (isSharedRoute) {
+    // Return a minimal context provider that doesn't enable any collaboration features
+    return (
+      <CollaborationContext.Provider
+        value={{
+          connectionState: 'disconnected',
+          diagramId: null,
+          currentUser: null,
+          activeUsers: [],
+          cursors: new Map(),
+          canEdit: false,
+          isOwner: false,
+          comments: [],
+          isLoadingComments: false,
+          setDiagramId: () => {},
+          sendCursorMove: () => {},
+          sendViewportChange: () => {},
+          sendNodeDrag: () => {},
+          sendNodeDragEnd: () => {},
+          sendDiagramUpdate: () => {},
+          sendCommentCreate: () => {},
+          sendCommentResolve: () => {},
+          sendCommentDelete: () => {},
+          refreshComments: () => {},
+          setOnDiagramUpdate: () => {},
+          setOnNodeDrag: () => {},
+          setOnNodeDragEnd: () => {},
+        }}
+      >
+        {children}
+      </CollaborationContext.Provider>
+    );
+  }
+
+  // Memoize context value - extract individual properties instead of depending on entire collaboration object
   const value: CollaborationContextValue = React.useMemo(
     () => ({
       connectionState: collaboration.connectionState,
@@ -156,7 +201,21 @@ export function CollaborationProvider({ children }: CollaborationProviderProps) 
       setOnNodeDragEnd: setOnNodeDragEndHandler,
     }),
     [
-      collaboration,
+      // Use individual properties instead of entire collaboration object
+      collaboration.connectionState,
+      collaboration.currentUser,
+      collaboration.activeUsers,
+      collaboration.cursors,
+      collaboration.canEdit,
+      collaboration.isOwner,
+      collaboration.sendCursorMove,
+      collaboration.sendViewportChange,
+      collaboration.sendNodeDrag,
+      collaboration.sendNodeDragEnd,
+      collaboration.sendDiagramUpdate,
+      collaboration.sendCommentCreate,
+      collaboration.sendCommentResolve,
+      collaboration.sendCommentDelete,
       diagramId,
       comments,
       isLoadingComments,

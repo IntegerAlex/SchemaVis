@@ -80,6 +80,7 @@ export async function updateDiagram(
     content: Record<string, unknown>;
     isPublic: boolean;
     linkPermission: LinkPermission;
+    shareExpiresAt: Date | null;
     version: number;
   }>
 ) {

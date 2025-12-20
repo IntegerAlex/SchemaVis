@@ -140,6 +140,13 @@ export function ConnectionStatus() {
 
   const { connectionState } = collaboration;
 
+  // Check if SSE is enabled
+  const useSSE =
+    typeof window !== 'undefined' &&
+    window.EventSource &&
+    process.env.NEXT_PUBLIC_USE_SSE === 'true' &&
+    localStorage.getItem('schema-vis:sse-disabled') !== 'true';
+
   const statusConfig = {
     connected: { color: '#22c55e', label: 'Connected' },
     connecting: { color: '#f59e0b', label: 'Connecting...' },
@@ -149,14 +156,18 @@ export function ConnectionStatus() {
   };
 
   const status = statusConfig[connectionState];
+  const mode = useSSE ? 'Real-time (SSE)' : 'Polling';
 
   return (
     <div className="flex items-center gap-2 text-xs text-zinc-400">
       <div
         className="size-2 rounded-full"
         style={{ backgroundColor: status.color }}
+        aria-label={`${status.label} - ${mode}`}
       />
       <span>{status.label}</span>
+      <span className="text-zinc-500">•</span>
+      <span className="text-zinc-500">{mode}</span>
     </div>
   );
 }

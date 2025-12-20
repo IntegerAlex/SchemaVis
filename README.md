@@ -31,6 +31,7 @@ Focused state highlighting a selected table while dimming others for clarity.
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 - `CLERK_WEBHOOK_SECRET` (for `/api/wekbook` Clerk webhook verification)
+- `NEXT_PUBLIC_USE_SSE` (optional, default: `false`) - Set to `true` to enable Server-Sent Events for real-time presence updates (lower latency, requires Vercel Pro for optimal performance)
 
 ## Source and Compliance
 

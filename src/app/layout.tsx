@@ -4,6 +4,8 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { CollaborationProvider } from "@/context/collaboration-context";
+import { DiagramEventsProvider } from "@/context/diagram-events-context";
+import { ToastProvider } from "@/components/toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,7 +44,11 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <QueryProvider>
-            <CollaborationProvider>{children}</CollaborationProvider>
+            <ToastProvider>
+              <DiagramEventsProvider>
+                <CollaborationProvider>{children}</CollaborationProvider>
+              </DiagramEventsProvider>
+            </ToastProvider>
           </QueryProvider>
         </body>
       </ClerkProvider>

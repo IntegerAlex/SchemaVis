@@ -5,7 +5,11 @@
  */
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getSqlFileById, softDeleteSqlFile } from '@/lib/repositories/sql-files';
+import { getSqlFileById, softDeleteSqlFile, listSqlFiles } from '@/lib/repositories/sql-files';
+import { softDeleteDiagram } from '@/lib/repositories/diagrams';
+import { db } from '@/lib/db';
+import { diagrams } from '@/lib/schema';
+import { and, eq, isNull } from 'drizzle-orm';
 
 export async function GET(
   req: Request,
@@ -52,6 +56,23 @@ export async function DELETE(
 
   if (!deleted) {
     return NextResponse.json({ error: 'File not found' }, { status: 404 });
+  }
+
+  // Check if user has any remaining active SQL files
+  const remainingFiles = await listSqlFiles(userId);
+  
+  // If no active SQL files remain, soft-delete all diagrams owned by this user
+  // This ensures shared links become invalid when the source SQL file is deleted
+  if (remainingFiles.length === 0) {
+    const userDiagrams = await db
+      .select({ id: diagrams.id })
+      .from(diagrams)
+      .where(and(eq(diagrams.ownerId, userId), isNull(diagrams.deletedAt)));
+    
+    // Soft-delete all diagrams for this user
+    for (const diagram of userDiagrams) {
+      await softDeleteDiagram(diagram.id);
+    }
   }
 
   return NextResponse.json({ success: true }, { status: 200 });

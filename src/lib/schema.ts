@@ -56,6 +56,7 @@ export const diagrams = pgTable('diagrams', {
   isPublic: boolean('is_public').default(false).notNull(),
   shareToken: varchar('share_token', { length: 64 }).unique(),
   linkPermission: linkPermissionEnum('link_permission').default('view'),
+  shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
   version: integer('version').default(1).notNull(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

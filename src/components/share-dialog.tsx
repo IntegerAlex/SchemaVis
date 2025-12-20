@@ -36,6 +36,7 @@ interface ShareSettings {
   linkPermission: 'view' | 'edit';
   shareToken: string | null;
   shareUrl: string | null;
+  shareExpiresAt: string | null;
 }
 
 interface Permission {
@@ -53,6 +54,9 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
   const [inviteEmail, setInviteEmail] = React.useState('');
   const [inviteRole, setInviteRole] = React.useState<'editor' | 'viewer'>('viewer');
   const [inviteError, setInviteError] = React.useState<string | null>(null);
+  const [expiryDate, setExpiryDate] = React.useState<string>('');
+  const [expiryTime, setExpiryTime] = React.useState<string>('');
+  const [hasExpiry, setHasExpiry] = React.useState(false);
   const queryClient = useQueryClient();
 
   // Fetch share settings
@@ -65,6 +69,20 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
     },
     enabled: isOpen && !!diagramId,
   });
+
+  // Initialize expiry state from fetched data
+  React.useEffect(() => {
+    if (shareSettings?.shareExpiresAt) {
+      const expiry = new Date(shareSettings.shareExpiresAt);
+      setExpiryDate(expiry.toISOString().split('T')[0]);
+      setExpiryTime(expiry.toTimeString().slice(0, 5));
+      setHasExpiry(true);
+    } else if (shareSettings && !shareSettings.shareExpiresAt) {
+      setHasExpiry(false);
+      setExpiryDate('');
+      setExpiryTime('');
+    }
+  }, [shareSettings?.shareExpiresAt]);
 
   // Fetch permissions
   const { data: permissionsData, isLoading: isLoadingPermissions } = useQuery({
@@ -79,13 +97,18 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
 
   // Update share settings mutation
   const updateShareMutation = useMutation({
-    mutationFn: async (updates: Partial<ShareSettings & { regenerateToken?: boolean }>) => {
+    mutationFn: async (updates: Partial<ShareSettings & { regenerateToken?: boolean; shareExpiresAt?: string | null }>) => {
       // If enabling sharing and we have diagram content, include it to auto-save the diagram
       const body: Record<string, unknown> = { ...updates };
       if (updates.isPublic === true && diagramContent && databaseType) {
         body.diagramContent = diagramContent;
         body.diagramName = diagramName;
         body.databaseType = databaseType;
+      }
+      
+      // Handle expiry date/time
+      if (updates.shareExpiresAt !== undefined) {
+        body.shareExpiresAt = updates.shareExpiresAt;
       }
       
       const response = await fetch(`/api/diagrams/${diagramId}/share`, {
@@ -99,6 +122,17 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
     onSuccess: (data) => {
       // Optimistically update the cache with the response data
       queryClient.setQueryData(['diagram-share', diagramId], data);
+      // Update local expiry state if present
+      if (data.shareExpiresAt) {
+        const expiry = new Date(data.shareExpiresAt);
+        setExpiryDate(expiry.toISOString().split('T')[0]);
+        setExpiryTime(expiry.toTimeString().slice(0, 5));
+        setHasExpiry(true);
+      } else {
+        setHasExpiry(false);
+        setExpiryDate('');
+        setExpiryTime('');
+      }
     },
   });
 
@@ -220,7 +254,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
             <div className="flex items-center justify-center py-8">
               <Loader2 className="size-6 animate-spin text-zinc-400" />
             </div>
-          ) : (
+          ) : shareSettings ? (
             <>
               {/* Link sharing section */}
               <div className="space-y-4">
@@ -230,52 +264,121 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                     <span className="text-sm font-medium text-white">Link sharing</span>
                   </div>
                   <button
-                    onClick={() => updateShareMutation.mutate({ isPublic: !shareSettings?.isPublic })}
+                    onClick={() => {
+                      const newIsPublic = !shareSettings.isPublic;
+                      updateShareMutation.mutate({ isPublic: newIsPublic });
+                    }}
                     disabled={updateShareMutation.isPending}
                     className={cn(
                       'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                      shareSettings?.isPublic ? 'bg-blue-600' : 'bg-zinc-700'
+                      shareSettings.isPublic ? 'bg-blue-600' : 'bg-zinc-700',
+                      updateShareMutation.isPending && 'opacity-50 cursor-not-allowed'
                     )}
-                    aria-label={shareSettings?.isPublic ? 'Disable link sharing' : 'Enable link sharing'}
+                    aria-label={shareSettings.isPublic ? 'Disable link sharing' : 'Enable link sharing'}
                   >
                     <span
                       className={cn(
                         'inline-block h-4 w-4 rounded-full bg-white transition-transform',
-                        shareSettings?.isPublic ? 'translate-x-6' : 'translate-x-1'
+                        shareSettings.isPublic ? 'translate-x-6' : 'translate-x-1'
                       )}
                     />
                   </button>
                 </div>
 
-                {shareSettings?.isPublic && (
+                {shareSettings.isPublic ? (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Link permission */}
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-zinc-400">Anyone with the link can</span>
                       <select
-                        value={shareSettings.linkPermission}
+                        value={shareSettings?.linkPermission ?? 'view'}
                         onChange={(e) =>
                           updateShareMutation.mutate({
                             linkPermission: e.target.value as 'view' | 'edit',
                           })
                         }
-                        className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={updateShareMutation.isPending}
+                        className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="view">View</option>
                         <option value="edit">Edit</option>
                       </select>
                     </div>
 
+                    {/* Expiry option */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="expiry-checkbox"
+                          checked={hasExpiry}
+                          onChange={(e) => {
+                            setHasExpiry(e.target.checked);
+                            if (!e.target.checked) {
+                              updateShareMutation.mutate({ shareExpiresAt: null });
+                            }
+                          }}
+                          disabled={updateShareMutation.isPending}
+                          className="rounded border-white/10 bg-slate-800 text-blue-600 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        />
+                        <label htmlFor="expiry-checkbox" className="text-sm text-zinc-400 cursor-pointer">
+                          Set expiry date
+                        </label>
+                      </div>
+                      {hasExpiry && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <input
+                            type="date"
+                            value={expiryDate}
+                            onChange={(e) => setExpiryDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            disabled={updateShareMutation.isPending}
+                            className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <input
+                            type="time"
+                            value={expiryTime}
+                            onChange={(e) => setExpiryTime(e.target.value)}
+                            disabled={updateShareMutation.isPending}
+                            className="bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (expiryDate && expiryTime) {
+                                const expiryDateTime = new Date(`${expiryDate}T${expiryTime}`);
+                                updateShareMutation.mutate({ shareExpiresAt: expiryDateTime.toISOString() });
+                              }
+                            }}
+                            disabled={updateShareMutation.isPending || !expiryDate || !expiryTime}
+                            className="text-xs px-2 py-1 h-8 text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-50"
+                          >
+                            {updateShareMutation.isPending ? (
+                              <Loader2 className="size-3 animate-spin" />
+                            ) : (
+                              'Set'
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      {shareSettings?.shareExpiresAt && (
+                        <p className="text-xs text-zinc-500">
+                          Expires: {new Date(shareSettings.shareExpiresAt).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+
                     {/* Share URL */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-300 truncate">
-                        {shareSettings.shareUrl || 'No link generated'}
+                        {shareSettings?.shareUrl || 'No link generated'}
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={handleCopyLink}
-                        disabled={!shareSettings.shareUrl}
+                        disabled={!shareSettings?.shareUrl}
                         className="shrink-0 h-9 w-9 text-zinc-400 hover:text-white hover:bg-white/10"
                         aria-label="Copy link"
                       >
@@ -286,15 +389,19 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                         size="icon"
                         onClick={() => updateShareMutation.mutate({ regenerateToken: true })}
                         disabled={updateShareMutation.isPending}
-                        className="shrink-0 h-9 w-9 text-zinc-400 hover:text-white hover:bg-white/10"
+                        className="shrink-0 h-9 w-9 text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Generate new link"
                       >
-                        <RefreshCw className={cn('size-4', updateShareMutation.isPending && 'animate-spin')} />
+                        {updateShareMutation.isPending ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="size-4" />
+                        )}
                       </Button>
                     </div>
 
                     <p className="text-xs text-zinc-500">
-                      {shareSettings.linkPermission === 'edit' ? (
+                      {shareSettings?.linkPermission === 'edit' ? (
                         <>
                           <Globe className="inline size-3 mr-1" />
                           Anyone with the link can edit this diagram
@@ -307,7 +414,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                       )}
                     </p>
                   </div>
-                )}
+                ) : null}
               </div>
 
               <div className="border-t border-white/10" />
@@ -431,7 +538,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                 )}
               </div>
             </>
-          )}
+          ) : null}
         </div>
 
         {/* Footer */}

@@ -20,6 +20,7 @@ const updateShareSchema = z.object({
   isPublic: z.boolean().optional(),
   linkPermission: z.enum(['view', 'edit']).optional(),
   regenerateToken: z.boolean().optional(),
+  shareExpiresAt: z.string().nullable().optional(),
   // Optional diagram content - required if diagram doesn't exist and enabling sharing
   diagramContent: z.record(z.unknown()).optional(),
   diagramName: z.string().optional(),
@@ -47,6 +48,7 @@ export async function GET(
       linkPermission: 'view',
       shareToken: null,
       shareUrl: null,
+      shareExpiresAt: null,
     });
   }
 
@@ -66,6 +68,7 @@ export async function GET(
     linkPermission: diagram.linkPermission,
     shareToken: diagram.shareToken,
     shareUrl,
+    shareExpiresAt: diagram.shareExpiresAt?.toISOString() ?? null,
   });
 }
 
@@ -117,11 +120,14 @@ export async function PATCH(
 
       // Update sharing settings
       const shareToken = created.shareToken;
-      const updates: { isPublic?: boolean; linkPermission?: 'view' | 'edit' } = {
+      const updates: { isPublic?: boolean; linkPermission?: 'view' | 'edit'; shareExpiresAt?: Date | null } = {
         isPublic: true,
       };
       if (parsed.data.linkPermission !== undefined) {
         updates.linkPermission = parsed.data.linkPermission;
+      }
+      if (parsed.data.shareExpiresAt !== undefined) {
+        updates.shareExpiresAt = parsed.data.shareExpiresAt ? new Date(parsed.data.shareExpiresAt) : null;
       }
       await updateDiagram(diagramId, updates);
 
@@ -134,6 +140,7 @@ export async function PATCH(
         linkPermission: parsed.data.linkPermission ?? 'view',
         shareToken,
         shareUrl,
+        shareExpiresAt: diagram.shareExpiresAt?.toISOString() ?? null,
       });
     } else {
       // No content provided, return settings but link won't work
@@ -146,6 +153,7 @@ export async function PATCH(
         linkPermission: parsed.data.linkPermission ?? 'view',
         shareToken,
         shareUrl,
+        shareExpiresAt: null,
       });
     }
   }
@@ -153,12 +161,13 @@ export async function PATCH(
   // If diagram doesn't exist and not enabling sharing, return defaults
   if (!diagram) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    return NextResponse.json({
-      isPublic: parsed.data.isPublic ?? false,
-      linkPermission: parsed.data.linkPermission ?? 'view',
-      shareToken: null,
-      shareUrl: null,
-    });
+      return NextResponse.json({
+        isPublic: parsed.data.isPublic ?? false,
+        linkPermission: parsed.data.linkPermission ?? 'view',
+        shareToken: null,
+        shareUrl: null,
+        shareExpiresAt: null,
+      });
   }
 
   // Only owner can modify share settings
@@ -173,12 +182,15 @@ export async function PATCH(
     shareToken = await regenerateShareToken(diagramId);
   }
 
-  const updates: { isPublic?: boolean; linkPermission?: 'view' | 'edit' } = {};
+  const updates: { isPublic?: boolean; linkPermission?: 'view' | 'edit'; shareExpiresAt?: Date | null } = {};
   if (parsed.data.isPublic !== undefined) {
     updates.isPublic = parsed.data.isPublic;
   }
   if (parsed.data.linkPermission !== undefined) {
     updates.linkPermission = parsed.data.linkPermission;
+  }
+  if (parsed.data.shareExpiresAt !== undefined) {
+    updates.shareExpiresAt = parsed.data.shareExpiresAt ? new Date(parsed.data.shareExpiresAt) : null;
   }
 
   if (Object.keys(updates).length > 0) {
@@ -196,6 +208,7 @@ export async function PATCH(
     linkPermission: updatedDiagram?.linkPermission,
     shareToken: shareToken || updatedDiagram?.shareToken,
     shareUrl,
+    shareExpiresAt: updatedDiagram?.shareExpiresAt?.toISOString() ?? null,
   });
 }
 
