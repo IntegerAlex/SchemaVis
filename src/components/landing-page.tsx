@@ -8,7 +8,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import { Github, Database, Shield, Zap } from 'lucide-react';
+import { Database, Shield, Zap } from 'lucide-react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { ChartCanvas } from './chart-canvas';
 import type { Diagram } from '@/lib/domain/diagram';
@@ -206,15 +206,6 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             />
 
           <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/IntegerAlex/SchemaVis"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:flex items-center gap-2 text-sm text-slate-300 hover:text-white transition"
-            >
-              <Github className="h-4 w-4" />
-              <span>GitHub</span>
-            </a>
             <SignedIn>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
@@ -243,7 +234,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 </span>
               </h1>
               <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
-                Built with the same clarity you expect from chartdb: readable nodes, clean handles,
+                Built with clarity: readable nodes, clean handles,
                 and a focused workspace.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -280,9 +271,9 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-1">
                   <div className="flex items-center gap-2 text-white font-semibold">
-                    <Shield className="h-4 w-4 text-purple-300" /> Open source
+                    <Shield className="h-4 w-4 text-purple-300" /> Secure & Private
                   </div>
-                  <p className="leading-relaxed">AGPL v3. Inspect, self-host, or contribute.</p>
+                  <p className="leading-relaxed">Your data stays secure and private.</p>
                 </div>
               </div>
             </div>
@@ -305,24 +296,43 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
         </main>
 
         <footer className="px-6 pb-10">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-400">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400">
             <div className="flex items-center gap-2">
-              <span>SchemaVis · AGPL v3</span>
+              <span>© 2025 SchemaVis</span>
               <span className="text-slate-600">•</span>
-              <a
-                className="hover:text-white transition"
-                href="https://github.com/IntegerAlex/SchemaVis"
-                target="_blank"
-                rel="noreferrer"
-              >
-                GitHub
-              </a>
+              <span>GOSSORG</span>
             </div>
-            {/* <div className="flex items-center gap-2">
-              <span>Auth by Clerk</span>
-              <span className="text-slate-600">•</span>
-              <span>PostgreSQL-first</span>
-            </div> */}
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <a
+                  href="/terms"
+                  className="hover:text-white transition"
+                >
+                  Terms of Service
+                </a>
+                <span className="text-slate-600">•</span>
+                <a
+                  href="/privacy"
+                  className="hover:text-white transition"
+                >
+                  Privacy Policy
+                </a>
+                <span className="text-slate-600">•</span>
+                <a
+                  href="/license"
+                  className="hover:text-white transition"
+                >
+                  License
+                </a>
+                <span className="text-slate-600">•</span>
+                <a
+                  href="/contact"
+                  className="hover:text-white transition"
+                >
+                  Contact
+                </a>
+              </div>
+            </div>
           </div>
         </footer>
       </div>
