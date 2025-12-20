@@ -659,23 +659,48 @@ export function useCollaboration(options: UseCollaborationOptions): UseCollabora
   );
 
   const sendCommentCreate = useCallback(
-    async (content: string, x: number, y: number, parentId?: number) => {
+    async (content: string, x: number, y: number, parentId?: number, diagramContent?: Record<string, unknown>, diagramName?: string, databaseType?: string) => {
       if (!diagramId) return;
 
       try {
+        const requestBody: {
+          content: string;
+          x: number;
+          y: number;
+          parentId?: number;
+          diagramContent?: Record<string, unknown>;
+          diagramName?: string;
+          databaseType?: string;
+        } = { content, x, y };
+        
+        if (parentId !== undefined) {
+          requestBody.parentId = parentId;
+        }
+        
+        // Include diagram content if provided (for auto-creating diagram if it doesn't exist)
+        if (diagramContent) {
+          requestBody.diagramContent = diagramContent;
+          if (diagramName) requestBody.diagramName = diagramName;
+          if (databaseType) requestBody.databaseType = databaseType;
+        }
+
         const response = await fetch(`/api/diagrams/${diagramId}/comments`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, x, y, parentId }),
+          body: JSON.stringify(requestBody),
         });
 
-        if (!response.ok) throw new Error('Failed to create comment');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to create comment');
+        }
 
         const { comment } = await response.json();
         onCommentCreated?.(comment);
         queryClient.invalidateQueries({ queryKey: ['diagram-comments', diagramId] });
       } catch (error) {
         console.error('[Collaboration] Failed to create comment:', error);
+        throw error; // Re-throw so caller can handle it
       }
     },
     [diagramId, onCommentCreated, queryClient]

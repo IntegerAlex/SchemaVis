@@ -22,6 +22,7 @@ import {
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
 
 interface ShareDialogProps {
   isOpen: boolean;
@@ -185,8 +186,18 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['diagram-permissions', diagramId] });
+      setDeletePermissionTarget(null);
     },
   });
+
+  const handleRemovePermissionClick = (userId: string, userName: string | null) => {
+    setDeletePermissionTarget({ userId, userName });
+  };
+
+  const handleRemovePermissionConfirm = () => {
+    if (!deletePermissionTarget) return;
+    removePermissionMutation.mutate(deletePermissionTarget.userId);
+  };
 
   // Search users query (debounced)
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -685,7 +696,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => removePermissionMutation.mutate(permission.userId)}
+                                  onClick={() => handleRemovePermissionClick(permission.userId, permission.userName || permission.userUsername || null)}
                                   disabled={removePermissionMutation.isPending}
                                   className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-900/20"
                                   aria-label={`Remove ${permission.userName || permission.userUsername || permission.userEmail}`}
@@ -720,6 +731,16 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
           </Button>
         </div>
       </div>
+
+      {/* Delete Permission Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={!!deletePermissionTarget}
+        onClose={() => setDeletePermissionTarget(null)}
+        onConfirm={handleRemovePermissionConfirm}
+        type="permission"
+        itemName={deletePermissionTarget?.userName || deletePermissionTarget?.userId || undefined}
+        isLoading={removePermissionMutation.isPending}
+      />
     </div>
   );
 }

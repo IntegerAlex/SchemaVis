@@ -446,6 +446,16 @@ export async function listComments(diagramId: string) {
     )
     .orderBy(diagramComments.createdAt);
 
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development' && comments.length === 0) {
+    // Check if there are any comments for this diagram (including deleted ones)
+    const allComments = await db
+      .select({ id: diagramComments.id, diagramId: diagramComments.diagramId, deletedAt: diagramComments.deletedAt })
+      .from(diagramComments)
+      .where(eq(diagramComments.diagramId, diagramId));
+    console.log(`[listComments] Diagram ${diagramId}: Found ${allComments.length} total comments (${allComments.filter(c => !c.deletedAt).length} active, ${allComments.filter(c => c.deletedAt).length} deleted)`);
+  }
+
   return comments;
 }
 

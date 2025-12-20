@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from './ui/button';
 import { Trash2, Loader2 } from 'lucide-react';
 import { useDiagramDelete } from '@/hooks/use-diagram-delete';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
 
 interface Diagram {
   id: string;
@@ -19,6 +20,8 @@ interface Diagram {
 }
 
 export function DiagramsList() {
+  const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
+  
   const { data: diagrams, isLoading } = useQuery({
     queryKey: ['diagrams'],
     queryFn: async () => {
@@ -31,11 +34,15 @@ export function DiagramsList() {
 
   const { deleteDiagram, isDeleting } = useDiagramDelete();
 
-  const handleDelete = (diagramId: string, diagramName: string) => {
-    if (confirm(`Are you sure you want to delete "${diagramName}"? This action cannot be undone.`)) {
-      deleteDiagram(diagramId);
-    }
+  const handleDeleteClick = (diagramId: string, diagramName: string) => {
+    setDeleteTarget({ id: diagramId, name: diagramName });
   };
+
+  const handleDeleteConfirm = React.useCallback(() => {
+    if (!deleteTarget) return;
+    deleteDiagram(deleteTarget.id);
+    setDeleteTarget(null);
+  }, [deleteTarget, deleteDiagram]);
 
   if (isLoading) {
     return <div>Loading diagrams...</div>;
@@ -58,11 +65,12 @@ export function DiagramsList() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => handleDelete(diagram.id, diagram.name)}
+            onClick={() => handleDeleteClick(diagram.id, diagram.name)}
             disabled={isDeleting}
             className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            aria-label={`Delete diagram: ${diagram.name}`}
           >
-            {isDeleting ? (
+            {isDeleting && deleteTarget?.id === diagram.id ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <Trash2 className="size-4" />
@@ -70,6 +78,16 @@ export function DiagramsList() {
           </Button>
         </div>
       ))}
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        type="diagram"
+        itemName={deleteTarget?.name}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

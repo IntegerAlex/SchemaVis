@@ -27,6 +27,7 @@ import { useOptionalCollaboration } from '@/context/collaboration-context';
 import { ReactFlowCursors } from './remote-cursors';
 import { CommentPinsLayer } from './comments/comment-pin';
 import { CommentThread } from './comments/comment-thread';
+import { CommentInputBox } from './comments/comment-input-box';
 import type { CommentData } from '@/lib/collaboration/types';
 
 interface ChartCanvasProps {
@@ -35,6 +36,10 @@ interface ChartCanvasProps {
   showControls?: boolean;
   readOnly?: boolean;
   onDiagramChange?: (diagram: Diagram) => void;
+  isCommentMode?: boolean;
+  onCommentModeChange?: (enabled: boolean) => void;
+  navigateToCommentId?: number | null;
+  onCommentCreate?: (content: string, x: number, y: number, parentId?: number) => void;
 }
 
 const nodeTypes: NodeTypes = {
@@ -47,13 +52,26 @@ export function ChartCanvas({
   showControls = true,
   readOnly = false,
   onDiagramChange,
+  isCommentMode: externalCommentMode,
+  onCommentModeChange,
+  navigateToCommentId,
 }: ChartCanvasProps) {
-  const { fitView, getNode, screenToFlowPosition } = useReactFlow();
+  const { fitView, getNode, screenToFlowPosition, setCenter } = useReactFlow();
   const viewport = useViewport();
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
-  const [isAddingComment, setIsAddingComment] = useState(false);
+  const [internalCommentMode, setInternalCommentMode] = useState(false);
+  const [commentInputPosition, setCommentInputPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isCreatingComment, setIsCreatingComment] = useState(false);
+  
+  // Use external comment mode if provided, otherwise use internal state
+  const isAddingComment = externalCommentMode !== undefined ? externalCommentMode : internalCommentMode;
+  const setIsAddingComment = externalCommentMode !== undefined 
+    ? (enabled: boolean) => {
+        onCommentModeChange?.(enabled);
+      }
+    : setInternalCommentMode;
   const containerRef = useRef<HTMLDivElement>(null);
   const sendCursorMoveRef = useRef<((x: number, y: number) => void) | null>(null);
   
@@ -196,7 +214,7 @@ export function ChartCanvas({
   // Store collaboration functions in refs to prevent re-renders
   const sendNodeDragRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
   const sendNodeDragEndRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
-  const sendCommentCreateRef = useRef<((content: string, x: number, y: number) => void) | null>(null);
+  const sendCommentCreateRef = useRef<((content: string, x: number, y: number, parentId?: number, diagramContent?: Record<string, unknown>, diagramName?: string, databaseType?: string) => void) | null>(null);
 
   useEffect(() => {
     sendNodeDragRef.current = collaboration?.sendNodeDrag ?? null;
@@ -222,20 +240,69 @@ export function ChartCanvas({
       setSelectedCommentId(null);
 
       // Handle adding comments
-      if (isAddingComment && sendCommentCreateRef.current) {
-        const rect = (event.target as HTMLElement).getBoundingClientRect();
-        const x = (event.clientX - rect.left - viewport.x) / viewport.zoom;
-        const y = (event.clientY - rect.top - viewport.y) / viewport.zoom;
-
-        const content = prompt('Enter your comment:');
-        if (content?.trim()) {
-          sendCommentCreateRef.current(content.trim(), x, y);
-        }
-        setIsAddingComment(false);
+      if (isAddingComment) {
+        // Store the screen position and show the comment input box
+        setCommentInputPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+        // Don't disable comment mode yet - wait for submit or cancel
       }
     },
-    [isAddingComment, viewport]
+    [isAddingComment]
   );
+
+  // Handle comment submission
+  const handleCommentSubmit = useCallback(
+    async (content: string) => {
+      if (!commentInputPosition || !sendCommentCreateRef.current) return;
+
+      // Convert screen position to flow coordinates for storage
+      const flowPosition = screenToFlowPosition({
+        x: commentInputPosition.x,
+        y: commentInputPosition.y,
+      });
+
+      // Include diagram content to auto-create diagram if it doesn't exist
+      const diagramContent = diagram ? {
+        tables: diagram.tables,
+        relationships: diagram.relationships,
+        dependencies: diagram.dependencies,
+        areas: diagram.areas,
+        customTypes: diagram.customTypes,
+        notes: diagram.notes,
+      } : undefined;
+
+      setIsCreatingComment(true);
+      try {
+        await sendCommentCreateRef.current(
+          content,
+          flowPosition.x,
+          flowPosition.y,
+          undefined, // parentId
+          diagramContent,
+          diagram?.name || 'Untitled Diagram',
+          diagram?.databaseType || 'POSTGRESQL'
+        );
+        // Close input box and disable comment mode after successful creation
+        setCommentInputPosition(null);
+        setIsCreatingComment(false);
+        setIsAddingComment(false);
+      } catch (error) {
+        // On error, keep the input box open but stop loading
+        console.error('Failed to create comment:', error);
+        setIsCreatingComment(false);
+      }
+    },
+    [commentInputPosition, sendCommentCreateRef, screenToFlowPosition, diagram]
+  );
+
+  // Handle comment input close
+  const handleCommentInputClose = useCallback(() => {
+    setCommentInputPosition(null);
+    setIsCreatingComment(false);
+    setIsAddingComment(false);
+  }, []);
 
   // Handle node drag for collaboration
   const handleNodeDrag = useCallback(
@@ -263,6 +330,18 @@ export function ChartCanvas({
     },
     [canEdit, diagram, onDiagramChange]
   );
+
+  // Navigate to comment when navigateToCommentId changes
+  React.useEffect(() => {
+    if (navigateToCommentId && collaboration?.comments) {
+      const comment = collaboration.comments.find((c) => c.id === navigateToCommentId);
+      if (comment) {
+        setSelectedCommentId(navigateToCommentId);
+        // Navigate to comment position
+        setCenter(comment.x, comment.y, { zoom: Math.max(viewport.zoom, 1) });
+      }
+    }
+  }, [navigateToCommentId, collaboration?.comments, setCenter, viewport.zoom]);
 
   // Get comments for the selected comment thread
   const selectedComment = React.useMemo(() => {
@@ -332,6 +411,17 @@ export function ChartCanvas({
           selectedCommentId={selectedCommentId}
           onSelectComment={setSelectedCommentId}
           viewport={viewport}
+        />
+      )}
+
+      {/* Comment input box */}
+      {commentInputPosition && (
+        <CommentInputBox
+          x={commentInputPosition.x}
+          y={commentInputPosition.y}
+          onClose={handleCommentInputClose}
+          onSubmit={handleCommentSubmit}
+          isLoading={isCreatingComment}
         />
       )}
 

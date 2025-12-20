@@ -19,6 +19,7 @@
     import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
     import { ShareDialog } from './share-dialog';
     import { CommentsPanel } from './comments/comments-panel';
+    import { RightSidebar } from './right-sidebar';
     import { useOptionalCollaboration } from '@/context/collaboration-context';
     import type { CommentData } from '@/lib/collaboration/types';
     import { detectDatabaseType } from '@/lib/parsers';
@@ -56,6 +57,8 @@
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
     const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
+    const [isCommentMode, setIsCommentMode] = React.useState(false);
+    const [navigateToCommentId, setNavigateToCommentId] = React.useState<number | null>(null);
     const queryClient = useQueryClient();
     const collaboration = useOptionalCollaboration();
 
@@ -109,9 +112,12 @@
 
     // Navigate to comment location on canvas
     const handleNavigateToComment = React.useCallback((comment: CommentData) => {
-      // Close panel and scroll to comment
+      // Close panel
       setIsCommentsPanelOpen(false);
-      // The canvas will handle highlighting the comment
+      // Set comment ID to navigate to - ChartCanvas will handle the navigation
+      setNavigateToCommentId(comment.id);
+      // Clear after a short delay to allow re-navigation if needed
+      setTimeout(() => setNavigateToCommentId(null), 100);
     }, []);
 
     const navLinks = React.useMemo(
@@ -223,19 +229,7 @@
                 <div className="hidden md:flex items-center space-x-3">
                 {/* Collaboration features disabled */}
 
-                {/* Share button */}
-                <SignedIn>
-                  {diagram && (
-                    <Button
-                      variant="ghost"
-                      onClick={() => setIsShareDialogOpen(true)}
-                      className="h-9 px-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg border border-transparent hover:border-white/10"
-                    >
-                      <Share2 className="size-4 mr-2" />
-                      Share
-                    </Button>
-                  )}
-                </SignedIn>
+                {/* Comment and share buttons moved to right sidebar */}
 
                 <Button
                     onClick={handleUploadClick}
@@ -374,7 +368,7 @@
           </SignedIn>
 
           {/* Canvas */}
-          <div className="flex-1 overflow-hidden bg-slate-900/40 backdrop-blur-xl px-4 pb-6 pt-4">
+          <div className="flex-1 overflow-hidden bg-slate-900/40 backdrop-blur-xl px-4 pb-6 pt-4 relative">
             <div className="h-full w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_-30px_rgba(59,130,246,0.45)]">
             <ReactFlowProvider>
             {parseMutation.isPending ? (
@@ -405,11 +399,33 @@
                 <ChartCanvas 
                   diagram={diagram} 
                   readOnly={false}
+                  isCommentMode={isCommentMode}
+                  onCommentModeChange={setIsCommentMode}
+                  navigateToCommentId={navigateToCommentId}
                 />
             )}
             </ReactFlowProvider>
             </div>
           </div>
+
+          {/* Right Sidebar */}
+          <SignedIn>
+            {diagram && (
+              <RightSidebar
+                onCommentsClick={() => setIsCommentsPanelOpen((prev) => !prev)}
+                onShareClick={() => setIsShareDialogOpen(true)}
+                onAddCommentClick={() => {
+                  setIsCommentMode((prev) => !prev);
+                  if (!isCommentMode) {
+                    setIsCommentsPanelOpen(true);
+                  }
+                }}
+                isCommentsOpen={isCommentsPanelOpen}
+                isCommentMode={isCommentMode}
+                showShare={!!diagram}
+              />
+            )}
+          </SignedIn>
         </div>
 
         {/* Share Dialog */}

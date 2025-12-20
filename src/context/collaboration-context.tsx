@@ -42,7 +42,7 @@ interface CollaborationContextValue {
   sendNodeDrag: (nodeId: string, x: number, y: number) => void;
   sendNodeDragEnd: (nodeId: string, x: number, y: number) => void;
   sendDiagramUpdate: (content: Record<string, unknown>, version: number) => void;
-  sendCommentCreate: (content: string, x: number, y: number, parentId?: number) => void;
+  sendCommentCreate: (content: string, x: number, y: number, parentId?: number, diagramContent?: Record<string, unknown>, diagramName?: string, databaseType?: string) => void;
   sendCommentResolve: (commentId: number) => void;
   sendCommentDelete: (commentId: number) => void;
   refreshComments: () => void;

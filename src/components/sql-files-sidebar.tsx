@@ -328,7 +328,8 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
         isOpen={!!confirmDelete}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        fileName={confirmDelete?.fileName}
+        type="file"
+        itemName={confirmDelete?.fileName}
         isLoading={deletingId === confirmDelete?.fileId}
       />
     </aside>

@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import type { CommentData } from '@/lib/collaboration/types';
 import { getUserColor } from '@/lib/collaboration/types';
 import { useOptionalCollaboration } from '@/context/collaboration-context';
+import { DeleteConfirmDialog } from '../delete-confirm-dialog';
 
 interface CommentThreadProps {
   comment: CommentData;
@@ -27,23 +28,29 @@ export function CommentThread({
   currentUserId,
 }: CommentThreadProps) {
   const [replyContent, setReplyContent] = React.useState('');
+  const [deleteTarget, setDeleteTarget] = React.useState<{ id: number; isReply: boolean } | null>(null);
   const collaboration = useOptionalCollaboration();
 
   const handleResolve = React.useCallback(() => {
     collaboration?.sendCommentResolve(comment.id);
   }, [collaboration, comment.id]);
 
-  const handleDelete = React.useCallback(
-    (commentId: number) => {
-      if (confirm('Delete this comment?')) {
-        collaboration?.sendCommentDelete(commentId);
-        if (commentId === comment.id) {
-          onClose();
-        }
-      }
+  const handleDeleteClick = React.useCallback(
+    (commentId: number, isReply: boolean) => {
+      setDeleteTarget({ id: commentId, isReply });
     },
-    [collaboration, comment.id, onClose]
+    []
   );
+
+  const handleDeleteConfirm = React.useCallback(() => {
+    if (!deleteTarget) return;
+    
+    collaboration?.sendCommentDelete(deleteTarget.id);
+    if (deleteTarget.id === comment.id) {
+      onClose();
+    }
+    setDeleteTarget(null);
+  }, [collaboration, deleteTarget, comment.id, onClose]);
 
   const handleReply = React.useCallback(
     (e: React.FormEvent) => {
@@ -130,7 +137,7 @@ export function CommentThread({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleDelete(comment.id)}
+              onClick={() => handleDeleteClick(comment.id, false)}
               className="h-7 px-2 text-xs text-zinc-400 hover:text-red-400 hover:bg-red-900/20"
             >
               <Trash2 className="size-3 mr-1" />
@@ -147,7 +154,7 @@ export function CommentThread({
             <ReplyItem
               key={reply.id}
               reply={reply}
-              onDelete={() => handleDelete(reply.id)}
+              onDelete={() => handleDeleteClick(reply.id, true)}
               canDelete={currentUserId === reply.userId || collaboration?.isOwner}
             />
           ))}
@@ -176,6 +183,18 @@ export function CommentThread({
           <Send className="size-4" />
         </Button>
       </form>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        type={deleteTarget?.isReply ? 'reply' : 'comment'}
+        itemName={deleteTarget ? (deleteTarget.isReply 
+          ? replies.find(r => r.id === deleteTarget.id)?.content.slice(0, 50)
+          : comment.content.slice(0, 50)
+        ) : undefined}
+      />
     </div>
   );
 }
