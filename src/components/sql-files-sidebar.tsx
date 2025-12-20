@@ -31,9 +31,10 @@ function formatDate(date: Date | string): string {
 
 interface SqlFilesSidebarProps {
   className?: string;
+  onFileLoad?: (sqlContent: string, fileName: string) => void;
 }
 
-export function SqlFilesSidebar({ className }: SqlFilesSidebarProps) {
+export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = React.useState<{ fileId: number; fileName: string } | null>(null);
@@ -49,13 +50,20 @@ export function SqlFilesSidebar({ className }: SqlFilesSidebarProps) {
         if (!response.ok) throw new Error('Failed to fetch file');
         const { file } = await response.json();
         if (file?.content) {
-          parseMutation.mutate(file.content);
+          const fileName = file.title || `File ${file.id}`;
+          
+          // Use the onFileLoad callback if provided, otherwise fall back to direct mutation
+          if (onFileLoad) {
+            onFileLoad(file.content, fileName);
+          } else {
+            parseMutation.mutate(file.content);
+          }
         }
       } catch (error) {
         console.error('Error loading SQL file:', error);
       }
     },
-    [parseMutation]
+    [parseMutation, onFileLoad]
   );
 
   const handleDeleteClick = React.useCallback(
