@@ -18,10 +18,11 @@
     import { useQueryClient } from '@tanstack/react-query';
     import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
     import { ShareDialog } from './share-dialog';
-    import { CommentsPanel } from './comments/comments-panel';
+    // Comments feature disabled
+    // import { CommentsPanel } from './comments/comments-panel';
     import { RightSidebar } from './right-sidebar';
     import { useOptionalCollaboration } from '@/context/collaboration-context';
-    import type { CommentData } from '@/lib/collaboration/types';
+    // import type { CommentData } from '@/lib/collaboration/types';
     import { detectDatabaseType } from '@/lib/parsers';
     import { DatabaseType } from '@/lib/domain/database-type';
 
@@ -57,7 +58,6 @@
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
     const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
-    const [isCommentMode, setIsCommentMode] = React.useState(false);
     const [navigateToCommentId, setNavigateToCommentId] = React.useState<number | null>(null);
     const queryClient = useQueryClient();
     const collaboration = useOptionalCollaboration();
@@ -95,30 +95,44 @@
       
       const diagramId = diagram?.id ?? null;
       
+      // Clear collaboration context when diagram ID changes (before setting new one)
+      if (prevDiagramIdRef.current !== null && prevDiagramIdRef.current !== diagramId) {
+        // Clear the old diagram's collaboration state
+        collaboration.setDiagramId(null);
+        // Invalidate queries for the old diagram
+        queryClient.removeQueries({ queryKey: ['diagram-comments', prevDiagramIdRef.current] });
+      }
+      
       // Only update if diagram ID actually changed
       if (prevDiagramIdRef.current !== diagramId) {
         prevDiagramIdRef.current = diagramId;
-        collaboration.setDiagramId(diagramId);
+        // Set new diagram ID (this will trigger comments refetch)
+        if (diagramId) {
+          collaboration.setDiagramId(diagramId);
+        }
       }
       
       return () => {
         // Only clear on unmount, not on every change
         if (prevDiagramIdRef.current !== null) {
+          const oldId = prevDiagramIdRef.current;
           prevDiagramIdRef.current = null;
           collaboration.setDiagramId(null);
+          queryClient.removeQueries({ queryKey: ['diagram-comments', oldId] });
         }
       };
-    }, [diagram?.id, collaboration?.setDiagramId]);
+    }, [diagram?.id, collaboration?.setDiagramId, queryClient]);
 
-    // Navigate to comment location on canvas
-    const handleNavigateToComment = React.useCallback((comment: CommentData) => {
-      // Close panel
-      setIsCommentsPanelOpen(false);
-      // Set comment ID to navigate to - ChartCanvas will handle the navigation
-      setNavigateToCommentId(comment.id);
-      // Clear after a short delay to allow re-navigation if needed
-      setTimeout(() => setNavigateToCommentId(null), 100);
-    }, []);
+    // Comments feature disabled
+    // // Navigate to comment location on canvas
+    // const handleNavigateToComment = React.useCallback((comment: CommentData) => {
+    //   // Close panel
+    //   setIsCommentsPanelOpen(false);
+    //   // Set comment ID to navigate to - ChartCanvas will handle the navigation
+    //   setNavigateToCommentId(comment.id);
+    //   // Clear after a short delay to allow re-navigation if needed
+    //   setTimeout(() => setNavigateToCommentId(null), 100);
+    // }, []);
 
     const navLinks = React.useMemo(
         () => [
@@ -399,29 +413,23 @@
                 <ChartCanvas 
                   diagram={diagram} 
                   readOnly={false}
-                  isCommentMode={isCommentMode}
-                  onCommentModeChange={setIsCommentMode}
-                  navigateToCommentId={navigateToCommentId}
+                  // Comments feature disabled
+                  // navigateToCommentId={navigateToCommentId}
                 />
             )}
             </ReactFlowProvider>
             </div>
           </div>
 
-          {/* Right Sidebar */}
+          {/* Right Sidebar - Comments feature disabled */}
           <SignedIn>
             {diagram && (
               <RightSidebar
-                onCommentsClick={() => setIsCommentsPanelOpen((prev) => !prev)}
+                // Comments feature disabled
+                // onCommentsClick={() => setIsCommentsPanelOpen((prev) => !prev)}
+                onCommentsClick={() => {}} // Disabled
                 onShareClick={() => setIsShareDialogOpen(true)}
-                onAddCommentClick={() => {
-                  setIsCommentMode((prev) => !prev);
-                  if (!isCommentMode) {
-                    setIsCommentsPanelOpen(true);
-                  }
-                }}
-                isCommentsOpen={isCommentsPanelOpen}
-                isCommentMode={isCommentMode}
+                isCommentsOpen={false} // Disabled
                 showShare={!!diagram}
               />
             )}
@@ -445,12 +453,13 @@
           databaseType={diagram?.databaseType}
         />
 
+        {/* Comments feature disabled */}
         {/* Comments Panel */}
-        <CommentsPanel
+        {/* <CommentsPanel
           isOpen={isCommentsPanelOpen}
           onClose={() => setIsCommentsPanelOpen(false)}
           onNavigateToComment={handleNavigateToComment}
-        />
+        /> */}
         </div>
     );
     }

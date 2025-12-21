@@ -25,10 +25,12 @@ import { TableNode } from './table-node';
 import type { Diagram } from '@/lib/domain/diagram';
 import { useOptionalCollaboration } from '@/context/collaboration-context';
 import { ReactFlowCursors } from './remote-cursors';
-import { CommentPinsLayer } from './comments/comment-pin';
-import { CommentThread } from './comments/comment-thread';
-import { CommentInputBox } from './comments/comment-input-box';
-import type { CommentData } from '@/lib/collaboration/types';
+// Comments feature disabled
+// import { CommentPinsLayer } from './comments/comment-pin';
+// import { CommentThread } from './comments/comment-thread';
+// import { CommentInputBox } from './comments/comment-input-box';
+import { ContextMenu, createContextMenuItems } from './context-menu';
+// import type { CommentData } from '@/lib/collaboration/types';
 
 interface ChartCanvasProps {
   diagram: Diagram | null;
@@ -36,10 +38,11 @@ interface ChartCanvasProps {
   showControls?: boolean;
   readOnly?: boolean;
   onDiagramChange?: (diagram: Diagram) => void;
-  isCommentMode?: boolean;
-  onCommentModeChange?: (enabled: boolean) => void;
-  navigateToCommentId?: number | null;
-  onCommentCreate?: (content: string, x: number, y: number, parentId?: number) => void;
+  // Comments feature disabled
+  // isCommentMode?: boolean;
+  // onCommentModeChange?: (enabled: boolean) => void;
+  // navigateToCommentId?: number | null;
+  // onCommentCreate?: (content: string, x: number, y: number, parentId?: number) => void;
 }
 
 const nodeTypes: NodeTypes = {
@@ -52,26 +55,31 @@ export function ChartCanvas({
   showControls = true,
   readOnly = false,
   onDiagramChange,
-  isCommentMode: externalCommentMode,
-  onCommentModeChange,
-  navigateToCommentId,
+  // Comments feature disabled
+  // isCommentMode: externalCommentMode,
+  // onCommentModeChange,
+  // navigateToCommentId,
 }: ChartCanvasProps) {
   const { fitView, getNode, screenToFlowPosition, setCenter } = useReactFlow();
   const viewport = useViewport();
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
-  const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
-  const [internalCommentMode, setInternalCommentMode] = useState(false);
-  const [commentInputPosition, setCommentInputPosition] = useState<{ x: number; y: number } | null>(null);
-  const [isCreatingComment, setIsCreatingComment] = useState(false);
+  // Comments feature disabled
+  // const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
+  // const [internalCommentMode, setInternalCommentMode] = useState(false);
+  // const [commentInputPosition, setCommentInputPosition] = useState<{ x: number; y: number } | null>(null);
+  // const [isCreatingComment, setIsCreatingComment] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   
-  // Use external comment mode if provided, otherwise use internal state
-  const isAddingComment = externalCommentMode !== undefined ? externalCommentMode : internalCommentMode;
-  const setIsAddingComment = externalCommentMode !== undefined 
-    ? (enabled: boolean) => {
-        onCommentModeChange?.(enabled);
-      }
-    : setInternalCommentMode;
+  // Comments feature disabled
+  // // Use external comment mode if provided, otherwise use internal state
+  // const isAddingComment = externalCommentMode !== undefined ? externalCommentMode : internalCommentMode;
+  // const setIsAddingComment = externalCommentMode !== undefined 
+  //   ? (enabled: boolean) => {
+  //       onCommentModeChange?.(enabled);
+  //     }
+  //   : setInternalCommentMode;
+  const isAddingComment = false; // Disabled
   const containerRef = useRef<HTMLDivElement>(null);
   const sendCursorMoveRef = useRef<((x: number, y: number) => void) | null>(null);
   
@@ -214,13 +222,15 @@ export function ChartCanvas({
   // Store collaboration functions in refs to prevent re-renders
   const sendNodeDragRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
   const sendNodeDragEndRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
-  const sendCommentCreateRef = useRef<((content: string, x: number, y: number, parentId?: number, diagramContent?: Record<string, unknown>, diagramName?: string, databaseType?: string) => void) | null>(null);
+  // Comments feature disabled
+  // const sendCommentCreateRef = useRef<((content: string, x: number, y: number, parentId?: number, diagramContent?: Record<string, unknown>, diagramName?: string, databaseType?: string) => void) | null>(null);
 
   useEffect(() => {
     sendNodeDragRef.current = collaboration?.sendNodeDrag ?? null;
     sendNodeDragEndRef.current = collaboration?.sendNodeDragEnd ?? null;
-    sendCommentCreateRef.current = collaboration?.sendCommentCreate ?? null;
-  }, [collaboration?.sendNodeDrag, collaboration?.sendNodeDragEnd, collaboration?.sendCommentCreate]);
+    // Comments feature disabled
+    // sendCommentCreateRef.current = collaboration?.sendCommentCreate ?? null;
+  }, [collaboration?.sendNodeDrag, collaboration?.sendNodeDragEnd]);
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -237,72 +247,114 @@ export function ChartCanvas({
     (event: React.MouseEvent) => {
       // Clear focus/highlight when clicking on empty space
       setHighlightedId(null);
-      setSelectedCommentId(null);
+      // Comments feature disabled
+      // setSelectedCommentId(null);
 
-      // Handle adding comments
-      if (isAddingComment) {
-        // Store the screen position and show the comment input box
-        setCommentInputPosition({
-          x: event.clientX,
-          y: event.clientY,
-        });
-        // Don't disable comment mode yet - wait for submit or cancel
-      }
+      // Comments feature disabled
+      // // Handle adding comments
+      // if (isAddingComment) {
+      //   // Store the screen position and show the comment input box
+      //   setCommentInputPosition({
+      //     x: event.clientX,
+      //     y: event.clientY,
+      //   });
+      //   // Don't disable comment mode yet - wait for submit or cancel
+      // }
     },
-    [isAddingComment]
+    []
   );
 
-  // Handle comment submission
-  const handleCommentSubmit = useCallback(
-    async (content: string) => {
-      if (!commentInputPosition || !sendCommentCreateRef.current) return;
+  // Comments feature disabled
+  // // Handle comment submission
+  // const handleCommentSubmit = useCallback(
+  //   async (content: string) => {
+  //     if (!commentInputPosition || !sendCommentCreateRef.current) return;
 
-      // Convert screen position to flow coordinates for storage
-      const flowPosition = screenToFlowPosition({
-        x: commentInputPosition.x,
-        y: commentInputPosition.y,
-      });
+  //     // Convert screen position to flow coordinates for storage
+  //     const flowPosition = screenToFlowPosition({
+  //       x: commentInputPosition.x,
+  //       y: commentInputPosition.y,
+  //     });
 
-      // Include diagram content to auto-create diagram if it doesn't exist
-      const diagramContent = diagram ? {
-        tables: diagram.tables,
-        relationships: diagram.relationships,
-        dependencies: diagram.dependencies,
-        areas: diagram.areas,
-        customTypes: diagram.customTypes,
-        notes: diagram.notes,
-      } : undefined;
+  //     // Include diagram content to auto-create diagram if it doesn't exist
+  //     const diagramContent = diagram ? {
+  //       tables: diagram.tables,
+  //       relationships: diagram.relationships,
+  //       dependencies: diagram.dependencies,
+  //       areas: diagram.areas,
+  //       customTypes: diagram.customTypes,
+  //       notes: diagram.notes,
+  //     } : undefined;
 
-      setIsCreatingComment(true);
-      try {
-        await sendCommentCreateRef.current(
-          content,
-          flowPosition.x,
-          flowPosition.y,
-          undefined, // parentId
-          diagramContent,
-          diagram?.name || 'Untitled Diagram',
-          diagram?.databaseType || 'POSTGRESQL'
-        );
-        // Close input box and disable comment mode after successful creation
-        setCommentInputPosition(null);
-        setIsCreatingComment(false);
-        setIsAddingComment(false);
-      } catch (error) {
-        // On error, keep the input box open but stop loading
-        console.error('Failed to create comment:', error);
-        setIsCreatingComment(false);
-      }
+  //     setIsCreatingComment(true);
+  //     try {
+  //       await sendCommentCreateRef.current(
+  //         content,
+  //         flowPosition.x,
+  //         flowPosition.y,
+  //         undefined, // parentId
+  //         diagramContent,
+  //         diagram?.name || 'Untitled Diagram',
+  //         diagram?.databaseType || 'POSTGRESQL'
+  //       );
+  //       // Close input box and disable comment mode after successful creation
+  //       setCommentInputPosition(null);
+  //       setIsCreatingComment(false);
+  //       setIsAddingComment(false);
+  //     } catch (error) {
+  //       // On error, keep the input box open but stop loading
+  //       console.error('Failed to create comment:', error);
+  //       setIsCreatingComment(false);
+  //     }
+  //   },
+  //   [commentInputPosition, sendCommentCreateRef, screenToFlowPosition, diagram]
+  // );
+
+  // // Handle comment input close
+  // const handleCommentInputClose = useCallback(() => {
+  //   setCommentInputPosition(null);
+  //   setIsCreatingComment(false);
+  //   setIsAddingComment(false);
+  // }, []);
+
+  // Handle right-click context menu
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      setContextMenu({ x: e.clientX, y: e.clientY });
     },
-    [commentInputPosition, sendCommentCreateRef, screenToFlowPosition, diagram]
+    []
   );
 
-  // Handle comment input close
-  const handleCommentInputClose = useCallback(() => {
-    setCommentInputPosition(null);
-    setIsCreatingComment(false);
-    setIsAddingComment(false);
-  }, []);
+  // Handle context menu actions
+  // Comments feature disabled
+  // const handleAddCommentFromMenu = useCallback(() => {
+  //   if (contextMenu) {
+  //     setCommentInputPosition({ x: contextMenu.x, y: contextMenu.y });
+  //     setContextMenu(null);
+  //   }
+  // }, [contextMenu]);
+
+  const handleZoomToFit = useCallback(() => {
+    fitView({ padding: 0.2, duration: 300 });
+    setContextMenu(null);
+  }, [fitView]);
+
+  const handleResetView = useCallback(() => {
+    fitView({ padding: 0.2, duration: 300 });
+    setContextMenu(null);
+  }, [fitView]);
+
+  // Context menu items - Comments feature disabled
+  const contextMenuItems = React.useMemo(
+    () =>
+      createContextMenuItems({
+        // onAddComment: handleAddCommentFromMenu, // Disabled
+        onZoomToFit: handleZoomToFit,
+        onResetView: handleResetView,
+      }),
+    [handleZoomToFit, handleResetView]
+  );
 
   // Handle node drag for collaboration
   const handleNodeDrag = useCallback(
@@ -331,28 +383,29 @@ export function ChartCanvas({
     [canEdit, diagram, onDiagramChange]
   );
 
-  // Navigate to comment when navigateToCommentId changes
-  React.useEffect(() => {
-    if (navigateToCommentId && collaboration?.comments) {
-      const comment = collaboration.comments.find((c) => c.id === navigateToCommentId);
-      if (comment) {
-        setSelectedCommentId(navigateToCommentId);
-        // Navigate to comment position
-        setCenter(comment.x, comment.y, { zoom: Math.max(viewport.zoom, 1) });
-      }
-    }
-  }, [navigateToCommentId, collaboration?.comments, setCenter, viewport.zoom]);
+  // Comments feature disabled
+  // // Navigate to comment when navigateToCommentId changes
+  // React.useEffect(() => {
+  //   if (navigateToCommentId && collaboration?.comments) {
+  //     const comment = collaboration.comments.find((c) => c.id === navigateToCommentId);
+  //     if (comment) {
+  //       setSelectedCommentId(navigateToCommentId);
+  //       // Navigate to comment position
+  //       setCenter(comment.x, comment.y, { zoom: Math.max(viewport.zoom, 1) });
+  //     }
+  //   }
+  // }, [navigateToCommentId, collaboration?.comments, setCenter, viewport.zoom]);
 
-  // Get comments for the selected comment thread
-  const selectedComment = React.useMemo(() => {
-    if (!selectedCommentId || !collaboration?.comments) return null;
-    return collaboration.comments.find((c) => c.id === selectedCommentId) ?? null;
-  }, [selectedCommentId, collaboration?.comments]);
+  // // Get comments for the selected comment thread
+  // const selectedComment = React.useMemo(() => {
+  //   if (!selectedCommentId || !collaboration?.comments) return null;
+  //   return collaboration.comments.find((c) => c.id === selectedCommentId) ?? null;
+  // }, [selectedCommentId, collaboration?.comments]);
 
-  const selectedCommentReplies = React.useMemo(() => {
-    if (!selectedCommentId || !collaboration?.comments) return [];
-    return collaboration.comments.filter((c) => c.parentId === selectedCommentId);
-  }, [selectedCommentId, collaboration?.comments]);
+  // const selectedCommentReplies = React.useMemo(() => {
+  //   if (!selectedCommentId || !collaboration?.comments) return [];
+  //   return collaboration.comments.filter((c) => c.parentId === selectedCommentId);
+  // }, [selectedCommentId, collaboration?.comments]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
@@ -375,6 +428,7 @@ export function ChartCanvas({
         elementsSelectable={true}
         proOptions={useMemo(() => ({ hideAttribution: true }), [])}
         onPaneClick={handlePaneClick}
+        onContextMenu={handleContextMenu}
         style={useMemo(() => ({ cursor: isAddingComment ? 'crosshair' : undefined }), [isAddingComment])}
       >
         <Background />
@@ -404,18 +458,30 @@ export function ChartCanvas({
         <ReactFlowCursors />
       )}
 
+      {/* Comments feature disabled */}
       {/* Comment pins overlay */}
-      {collaboration && collaboration.comments.length > 0 && (
+      {/* {collaboration && collaboration.comments.length > 0 && (
         <CommentPinsLayer
           comments={collaboration.comments}
           selectedCommentId={selectedCommentId}
           onSelectComment={setSelectedCommentId}
           viewport={viewport}
         />
+      )} */}
+
+      {/* Context menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenuItems}
+          onClose={() => setContextMenu(null)}
+        />
       )}
 
+      {/* Comments feature disabled */}
       {/* Comment input box */}
-      {commentInputPosition && (
+      {/* {commentInputPosition && (
         <CommentInputBox
           x={commentInputPosition.x}
           y={commentInputPosition.y}
@@ -423,10 +489,10 @@ export function ChartCanvas({
           onSubmit={handleCommentSubmit}
           isLoading={isCreatingComment}
         />
-      )}
+      )} */}
 
       {/* Selected comment thread popover */}
-      {selectedComment && (
+      {/* {selectedComment && (
         <div
           className="absolute z-50"
           style={{
@@ -441,7 +507,7 @@ export function ChartCanvas({
             currentUserId={collaboration?.currentUser?.id}
           />
         </div>
-      )}
+      )} */}
 
       {/* Read-only indicator */}
       {!canEdit && (

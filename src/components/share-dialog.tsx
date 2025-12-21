@@ -335,7 +335,7 @@ export function ShareDialog({ isOpen, onClose, diagramId, diagramName, diagramCo
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div>
-            <h2 className="text-lg font-semibold text-white">Share "{diagramName}"</h2>
+            <h2 className="text-lg font-semibold text-white">Share your schema</h2>
             <p className="text-sm text-zinc-400 mt-0.5">
               Invite collaborators or generate a shareable link
             </p>

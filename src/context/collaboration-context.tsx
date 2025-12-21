@@ -97,6 +97,9 @@ export function CollaborationProvider({ children }: CollaborationProviderProps) 
       return response.json();
     },
     enabled: !!diagramId && !isSharedRoute, // Disable for shared routes
+    refetchOnMount: true, // Always refetch on mount
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    staleTime: 0, // Always consider data stale
   });
 
   // Update comments state when data changes
@@ -105,6 +108,13 @@ export function CollaborationProvider({ children }: CollaborationProviderProps) 
       setComments(commentsData.comments);
     }
   }, [commentsData]);
+
+  // Clear comments when diagram ID changes or becomes null
+  React.useEffect(() => {
+    if (!diagramId) {
+      setComments([]);
+    }
+  }, [diagramId]);
 
   // Handle comment events
   const handleCommentCreated = React.useCallback((comment: CommentData) => {

@@ -6,16 +6,17 @@
 'use client';
 
 import * as React from 'react';
-import { MessageCircle, Share2, Plus } from 'lucide-react';
+// Comments feature disabled
+// import { MessageCircle, Share2 } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useOptionalCollaboration } from '@/context/collaboration-context';
+// Comments feature disabled
+// import { useOptionalCollaboration } from '@/context/collaboration-context';
 
 interface RightSidebarProps {
   onCommentsClick: () => void;
   onShareClick: () => void;
-  onAddCommentClick: () => void;
   isCommentsOpen: boolean;
-  isCommentMode: boolean;
   showShare?: boolean;
   className?: string;
 }
@@ -23,16 +24,15 @@ interface RightSidebarProps {
 export function RightSidebar({
   onCommentsClick,
   onShareClick,
-  onAddCommentClick,
   isCommentsOpen,
-  isCommentMode,
   showShare = false,
   className,
 }: RightSidebarProps) {
-  const collaboration = useOptionalCollaboration();
-  const unresolvedCount = collaboration?.comments
-    ? collaboration.comments.filter((c) => !c.resolved && c.parentId === null).length
-    : 0;
+  // Comments feature disabled
+  // const collaboration = useOptionalCollaboration();
+  // const unresolvedCount = collaboration?.comments
+  //   ? collaboration.comments.filter((c) => !c.resolved && c.parentId === null).length
+  //   : 0;
 
   return (
     <aside
@@ -47,28 +47,9 @@ export function RightSidebar({
       )}
       aria-label="Right sidebar actions"
     >
-      {/* Add Comment Button */}
-      <button
-        onClick={onAddCommentClick}
-        className={cn(
-          'flex items-center justify-center',
-          'w-11 h-11 rounded-xl',
-          'transition-all duration-200',
-          'bg-white/5 hover:bg-white/10',
-          'backdrop-blur-sm',
-          'border border-white/10 hover:border-white/20',
-          'text-zinc-400 hover:text-white',
-          'shadow-sm hover:shadow-md',
-          isCommentMode && 'bg-blue-500/20 text-blue-400 border-blue-500/40 shadow-blue-500/20'
-        )}
-        aria-label={isCommentMode ? 'Exit comment mode' : 'Add comment'}
-        title={isCommentMode ? 'Click on canvas to add comment' : 'Enable comment mode'}
-      >
-        <Plus className="size-5" />
-      </button>
-
+      {/* Comments feature disabled */}
       {/* Comments Button */}
-      <button
+      {/* <button
         onClick={onCommentsClick}
         className={cn(
           'relative flex items-center justify-center',
@@ -93,7 +74,7 @@ export function RightSidebar({
             {unresolvedCount > 9 ? '9+' : unresolvedCount}
           </span>
         )}
-      </button>
+      </button> */}
 
       {/* Share Button */}
       {showShare && (
