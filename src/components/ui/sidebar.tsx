@@ -33,9 +33,10 @@ interface SidebarProps {
   className?: string;
   onSelectSection?: (section: string) => void;
   selectedSection?: string;
+  onNewDiagramClick?: () => void;
 }
 
-export function Sidebar({ className, onSelectSection, selectedSection }: SidebarProps) {
+export function Sidebar({ className, onSelectSection, selectedSection, onNewDiagramClick }: SidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false);
 
   const items: SidebarItem[] = React.useMemo(
@@ -44,7 +45,7 @@ export function Sidebar({ className, onSelectSection, selectedSection }: Sidebar
         title: 'New Diagram',
         icon: Plus,
         onClick: () => {
-          // TODO: Implement new diagram
+          onNewDiagramClick?.();
         },
         active: false,
       },
@@ -89,7 +90,7 @@ export function Sidebar({ className, onSelectSection, selectedSection }: Sidebar
         active: selectedSection === 'visuals',
       },
     ],
-    [onSelectSection, selectedSection]
+    [onSelectSection, selectedSection, onNewDiagramClick]
   );
 
   return (

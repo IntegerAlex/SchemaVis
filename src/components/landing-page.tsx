@@ -303,34 +303,43 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               <span className="text-slate-600">•</span>
               <span>GOSSORG</span>
             </div>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <a
-                  href="/terms"
-                  className="hover:text-white transition"
-                >
-                  Terms of Service
-                </a>
-                <span className="text-slate-600">•</span>
-                <a
-                  href="/privacy"
-                  className="hover:text-white transition"
-                >
-                  Privacy Policy
-                </a>
-                <span className="text-slate-600">•</span>
-                <a
-                  href="/license"
-                  className="hover:text-white transition"
-                >
-                  License
-                </a>
-                <span className="text-slate-600">•</span>
-                <a
-                  href="/contact"
-                  className="hover:text-white transition"
-                >
-                  Contact
-                </a>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <a
+                    href="/alternatives"
+                    className="hover:text-white transition"
+                  >
+                    Alternatives
+                  </a>
+                  <span className="text-slate-600">•</span>
+                  <a
+                    href="/terms"
+                    className="hover:text-white transition"
+                  >
+                    Terms of Service
+                  </a>
+                  <span className="text-slate-600">•</span>
+                  <a
+                    href="/privacy"
+                    className="hover:text-white transition"
+                  >
+                    Privacy Policy
+                  </a>
+                  <span className="text-slate-600">•</span>
+                  <a
+                    href="/license"
+                    className="hover:text-white transition"
+                  >
+                    License
+                  </a>
+                  <span className="text-slate-600">•</span>
+                  <a
+                    href="/contact"
+                    className="hover:text-white transition"
+                  >
+                    Contact
+                  </a>
+                </div>
               </div>
             </div>
           </div>

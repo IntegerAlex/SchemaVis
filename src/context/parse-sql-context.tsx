@@ -3,9 +3,10 @@
 import * as React from 'react';
 import { useParseSQL, type ParseSQLResponse, type ParseSQLError } from '@/hooks/use-parse-sql';
 import type { UseMutationResult } from '@tanstack/react-query';
+import { DatabaseType } from '@/lib/domain/database-type';
 
 interface ParseSQLContextValue {
-  parseMutation: UseMutationResult<ParseSQLResponse, ParseSQLError, string>;
+  parseMutation: UseMutationResult<ParseSQLResponse, ParseSQLError, { sql: string; databaseType?: DatabaseType }>;
 }
 
 const ParseSQLContext = React.createContext<ParseSQLContextValue | null>(null);

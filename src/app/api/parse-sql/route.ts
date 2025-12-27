@@ -11,13 +11,14 @@ const parseSQLSchema = z.object({
       (val) => val.toLowerCase().includes('create table'),
       'SQL must include at least one CREATE TABLE statement'
     ),
+  databaseType: z.nativeEnum(DatabaseType).optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const start = Date.now();
     const body = await request.json();
-    const { sql } = parseSQLSchema.parse(body);
+    const { sql, databaseType } = parseSQLSchema.parse(body);
 
     if (!sql || typeof sql !== 'string' || !sql.toLowerCase().includes('create table')) {
       return NextResponse.json(
@@ -29,8 +30,8 @@ export async function POST(request: NextRequest) {
     // Parse SQL and convert to diagram
     const diagram = await sqlImportToDiagram({
       sqlContent: sql,
-      sourceDatabaseType: DatabaseType.POSTGRESQL,
-      targetDatabaseType: DatabaseType.POSTGRESQL,
+      sourceDatabaseType: databaseType ?? DatabaseType.GENERIC,
+      targetDatabaseType: DatabaseType.GENERIC,
     });
 
     const durationMs = Date.now() - start;

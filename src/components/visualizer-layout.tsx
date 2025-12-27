@@ -11,20 +11,22 @@
     import { useParseSQLContext } from '@/context/parse-sql-context';
     import { cn } from '@/lib/utils';
     import Image from 'next/image';
-    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Github, Share2, MessageCircle } from 'lucide-react';
+    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Github, Share2, MessageCircle, Plus } from 'lucide-react';
     import { ReactFlowProvider } from '@xyflow/react';
     import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
-    import { SqlFilesSidebar } from './sql-files-sidebar';
-    import { useQueryClient } from '@tanstack/react-query';
-    import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
-    import { ShareDialog } from './share-dialog';
-    // Comments feature disabled
-    // import { CommentsPanel } from './comments/comments-panel';
-    import { RightSidebar } from './right-sidebar';
-    import { useOptionalCollaboration } from '@/context/collaboration-context';
-    // import type { CommentData } from '@/lib/collaboration/types';
-    import { detectDatabaseType } from '@/lib/parsers';
-    import { DatabaseType } from '@/lib/domain/database-type';
+import { SqlFilesSidebar } from './sql-files-sidebar';
+// import { Sidebar } from './ui/sidebar'; // Deprecated: Replaced by header "New Diagram" button
+import { SqlInputSidebar } from './sql-input-sidebar';
+import { useQueryClient } from '@tanstack/react-query';
+import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
+import { ShareDialog } from './share-dialog';
+// Comments feature disabled
+// import { CommentsPanel } from './comments/comments-panel';
+import { RightSidebar } from './right-sidebar';
+import { useOptionalCollaboration } from '@/context/collaboration-context';
+// import type { CommentData } from '@/lib/collaboration/types';
+import { detectDatabaseType } from '@/lib/parsers';
+import { DatabaseType } from '@/lib/domain/database-type';
 
     interface VisualizerLayoutProps {
     className?: string;
@@ -59,6 +61,7 @@
     const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
     const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
     const [navigateToCommentId, setNavigateToCommentId] = React.useState<number | null>(null);
+    const [sidebarMode, setSidebarMode] = React.useState<'main' | 'sql-input'>('main');
     const queryClient = useQueryClient();
     const collaboration = useOptionalCollaboration();
 
@@ -72,6 +75,12 @@
         
         // Parse the SQL
         parseMutation.mutate(sqlContent);
+    }, [parseMutation]);
+
+    // Handle SQL changes from the SQL input sidebar
+    const handleSqlInputChange = React.useCallback((sql: string, databaseType: DatabaseType) => {
+        // Update the parse mutation with both sql and databaseType
+        parseMutation.mutate({ sql, databaseType });
     }, [parseMutation]);
 
     // Clear file info when parsing starts (to show loading state)
@@ -246,6 +255,14 @@
                 {/* Comment and share buttons moved to right sidebar */}
 
                 <Button
+                    onClick={() => setSidebarMode('sql-input')}
+                    className="px-5 py-2 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-lg transform hover:scale-105 border border-white/10"
+                >
+                    <Plus className="size-4 mr-2" />
+                    New Diagram
+                </Button>
+
+                <Button
                     onClick={handleUploadClick}
                     disabled={parseMutation.isPending}
                     className="px-5 py-2 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-lg transform hover:scale-105 border border-white/10"
@@ -324,6 +341,13 @@
                         <ExternalLink className="h-4 w-4" />
                     </a>
                     <Button
+                        onClick={() => setSidebarMode('sql-input')}
+                        className="w-full px-3 py-2.5 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors border border-white/10"
+                    >
+                        <Plus className="size-4 mr-2" />
+                        New Diagram
+                    </Button>
+                    <Button
                         onClick={handleUploadClick}
                         disabled={parseMutation.isPending}
                         className="w-full px-3 py-2.5 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors border border-white/10"
@@ -376,9 +400,21 @@
 
         {/* Main Content Area with Sidebar */}
         <div className="flex-1 overflow-hidden flex">
-          {/* SQL Files Sidebar */}
+          {/* Main Sidebar - Deprecated: Replaced by header "New Diagram" button */}
+          {/* <Sidebar onNewDiagramClick={() => setSidebarMode('sql-input')} /> */}
+
+          {/* SQL Files Sidebar or SQL Input Sidebar */}
           <SignedIn>
-            <SqlFilesSidebar onFileLoad={handleSQLContent} />
+            {sidebarMode === 'main' ? (
+              <SqlFilesSidebar onFileLoad={handleSQLContent} />
+            ) : (
+              <SqlInputSidebar
+                onBackClick={() => setSidebarMode('main')}
+                onSqlChange={handleSqlInputChange}
+                isLoading={parseMutation.isPending}
+                error={parseMutation.error?.error}
+              />
+            )}
           </SignedIn>
 
           {/* Canvas */}
