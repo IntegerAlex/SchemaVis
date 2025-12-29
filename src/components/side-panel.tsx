@@ -37,7 +37,7 @@ export function SidePanel({ className }: SidePanelProps) {
     if (!sql.trim()) {
       return;
     }
-    parseMutation.mutate(sql);
+    parseMutation.mutate({ sql });
   }, [sql, parseMutation]);
 
   const handleSqlChange = React.useCallback(

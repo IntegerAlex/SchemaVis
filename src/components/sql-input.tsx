@@ -3,9 +3,10 @@
 import { useRef, useState } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type { ParseSQLResponse, ParseSQLError } from '@/hooks/use-parse-sql';
+import { DatabaseType } from '@/lib/domain/database-type';
 
 interface SQLInputProps {
-  parseMutation: UseMutationResult<ParseSQLResponse, ParseSQLError, string>;
+  parseMutation: UseMutationResult<ParseSQLResponse, ParseSQLError, { sql: string; databaseType?: DatabaseType }>;
 }
 
 export function SQLInput({ parseMutation }: SQLInputProps) {
@@ -29,7 +30,7 @@ export function SQLInput({ parseMutation }: SQLInputProps) {
       return;
     }
 
-    parseMutation.mutate(sql);
+    parseMutation.mutate({ sql });
   };
 
   return (

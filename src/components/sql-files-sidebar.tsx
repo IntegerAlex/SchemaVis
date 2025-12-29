@@ -56,7 +56,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
           if (onFileLoad) {
             onFileLoad(file.content, fileName);
           } else {
-            parseMutation.mutate(file.content);
+            parseMutation.mutate({ sql: file.content });
           }
         }
       } catch (error) {

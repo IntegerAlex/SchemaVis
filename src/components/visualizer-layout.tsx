@@ -74,7 +74,7 @@ import { DatabaseType } from '@/lib/domain/database-type';
         setSelectedFileName(fileName);
         
         // Parse the SQL
-        parseMutation.mutate(sqlContent);
+        parseMutation.mutate({ sql: sqlContent });
     }, [parseMutation]);
 
     // Handle SQL changes from the SQL input sidebar
