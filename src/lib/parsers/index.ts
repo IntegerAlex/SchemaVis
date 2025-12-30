@@ -188,34 +188,72 @@ export async function sqlImportToDiagram({
     sourceDatabaseType: DatabaseType;
     targetDatabaseType: DatabaseType;
 }): Promise<Diagram> {
+    // Normalize database type in case it comes as a string
+    let dbType = sourceDatabaseType;
+    if (typeof dbType === 'string') {
+        // Try to match string value to enum
+        const normalized = dbType.toLowerCase();
+        const enumValue = Object.values(DatabaseType).find(
+            (val) => val.toLowerCase() === normalized
+        );
+        if (enumValue) {
+            dbType = enumValue as DatabaseType;
+        }
+    }
+
     // If source database type is GENERIC, try to auto-detect the type
-    if (sourceDatabaseType === DatabaseType.GENERIC) {
+    if (dbType === DatabaseType.GENERIC) {
         const detectedType = detectDatabaseType(sqlContent);
         if (detectedType) {
-            sourceDatabaseType = detectedType;
+            dbType = detectedType;
         } else {
-            sourceDatabaseType = DatabaseType.POSTGRESQL;
+            dbType = DatabaseType.POSTGRESQL;
         }
     }
 
     let parserResult: SQLParserResult;
 
-    // PostgreSQL only
-    if (sourceDatabaseType === DatabaseType.POSTGRESQL) {
-        // Check if the SQL is from pg_dump and use the appropriate parser
-        if (isPgDumpFormat(sqlContent)) {
-            parserResult = await fromPostgresDump(sqlContent);
+    // Route to appropriate parser based on database type
+    console.log(`[sqlImportToDiagram] Processing with database type: ${dbType}`);
+    
+    try {
+        if (dbType === DatabaseType.POSTGRESQL) {
+            // Check if the SQL is from pg_dump and use the appropriate parser
+            if (isPgDumpFormat(sqlContent)) {
+                console.log('[sqlImportToDiagram] Using pg_dump parser');
+                parserResult = await fromPostgresDump(sqlContent);
+            } else {
+                console.log('[sqlImportToDiagram] Using PostgreSQL parser');
+                parserResult = await fromPostgres(sqlContent);
+            }
+        } else if (dbType === DatabaseType.MYSQL || dbType === DatabaseType.MARIADB) {
+            console.log('[sqlImportToDiagram] Using MySQL parser');
+            parserResult = await fromMySQL(sqlContent);
+        } else if (dbType === DatabaseType.SQLITE) {
+            console.log('[sqlImportToDiagram] Using SQLite parser');
+            parserResult = await fromSQLite(sqlContent);
+        } else if (dbType === DatabaseType.ORACLE) {
+            console.log('[sqlImportToDiagram] Using Oracle parser');
+            parserResult = await fromOracle(sqlContent);
+        } else if (dbType === DatabaseType.SQL_SERVER) {
+            console.log('[sqlImportToDiagram] Using SQL Server parser');
+            parserResult = await fromSQLServer(sqlContent);
         } else {
-            parserResult = await fromPostgres(sqlContent);
+            console.error(`[sqlImportToDiagram] Unsupported database type: ${dbType} (original: ${sourceDatabaseType})`);
+            throw new Error(`Unsupported database type: ${dbType}`);
         }
-    } else {
-        throw new Error(`Unsupported database type: ${sourceDatabaseType}. Only PostgreSQL is supported.`);
+    } catch (parseError) {
+        console.error(`[sqlImportToDiagram] Parser error for ${dbType}:`, parseError);
+        if (parseError instanceof Error) {
+            throw parseError;
+        }
+        throw new Error(`Failed to parse SQL for ${dbType}: ${String(parseError)}`);
     }
 
     // Convert the parsed SQL to a diagram
     const diagram = convertToChartDBDiagram(
         parserResult,
-        sourceDatabaseType,
+        dbType,
         targetDatabaseType
     );
 
@@ -258,17 +296,23 @@ export async function parseSQLError({
     column?: number;
 }> {
     try {
-        // PostgreSQL only
+        // Route to appropriate parser based on database type
         if (sourceDatabaseType === DatabaseType.POSTGRESQL) {
             if (isPgDumpFormat(sqlContent)) {
                 await fromPostgresDump(sqlContent);
             } else {
                 await fromPostgres(sqlContent);
             }
+        } else if (sourceDatabaseType === DatabaseType.MYSQL || sourceDatabaseType === DatabaseType.MARIADB) {
+            await fromMySQL(sqlContent);
+        } else if (sourceDatabaseType === DatabaseType.SQLITE) {
+            await fromSQLite(sqlContent);
+        } else if (sourceDatabaseType === DatabaseType.ORACLE) {
+            await fromOracle(sqlContent);
+        } else if (sourceDatabaseType === DatabaseType.SQL_SERVER) {
+            await fromSQLServer(sqlContent);
         } else {
-            throw new Error(
-                `Unsupported database type: ${sourceDatabaseType}. Only PostgreSQL is supported.`
-            );
+            throw new Error(`Unsupported database type: ${sourceDatabaseType}`);
         }
 
         return { success: true };

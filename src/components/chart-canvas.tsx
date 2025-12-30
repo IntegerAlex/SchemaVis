@@ -321,7 +321,34 @@ export function ChartCanvas({
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      setContextMenu({ x: e.clientX, y: e.clientY });
+      
+      // Get coordinates from the native event
+      // ReactFlow's onContextMenu provides the event on the pane, so we need viewport coordinates
+      const nativeEvent = e.nativeEvent as MouseEvent;
+      
+      // Use clientX/clientY which are viewport-relative (perfect for fixed positioning)
+      let x = nativeEvent.clientX;
+      let y = nativeEvent.clientY;
+      
+      // If native event coordinates are not available, try React synthetic event
+      if ((!x && x !== 0) || (!y && y !== 0) || isNaN(x) || isNaN(y)) {
+        x = e.clientX;
+        y = e.clientY;
+      }
+      
+      // Final fallback: use pageX/pageY and subtract scroll
+      if ((!x && x !== 0) || (!y && y !== 0) || isNaN(x) || isNaN(y)) {
+        x = (e.nativeEvent as MouseEvent).pageX - window.scrollX;
+        y = (e.nativeEvent as MouseEvent).pageY - window.scrollY;
+      }
+      
+      // Ensure we have valid coordinates
+      if (typeof x === 'number' && typeof y === 'number' && !isNaN(x) && !isNaN(y) && x >= 0 && y >= 0) {
+        console.log('[ContextMenu] Setting position:', { x, y, clientX: e.clientX, clientY: e.clientY, nativeClientX: nativeEvent.clientX, nativeClientY: nativeEvent.clientY });
+        setContextMenu({ x, y });
+      } else {
+        console.error('[ContextMenu] Invalid coordinates:', { x, y, clientX: e.clientX, clientY: e.clientY, nativeEvent });
+      }
     },
     []
   );
@@ -407,6 +434,45 @@ export function ChartCanvas({
   //   return collaboration.comments.filter((c) => c.parentId === selectedCommentId);
   // }, [selectedCommentId, collaboration?.comments]);
 
+  // Handle context menu on the container to get correct viewport coordinates
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleContainerContextMenu = (e: MouseEvent) => {
+      // Only show menu when clicking on the pane background, not on nodes
+      const target = e.target as HTMLElement;
+      
+      // Check if clicking on a node or node content
+      if (target.closest('.react-flow__node') || target.closest('[data-id]')) {
+        return; // Don't show context menu on nodes
+      }
+      
+      // Check if clicking on controls, minimap, or other UI elements
+      if (target.closest('.react-flow__controls') || 
+          target.closest('.react-flow__minimap') ||
+          target.closest('.react-flow__background')) {
+        e.preventDefault();
+        // Use viewport coordinates directly from the native event
+        const x = e.clientX;
+        const y = e.clientY;
+        console.log('[ContextMenu] Setting menu at:', { x, y });
+        setContextMenu({ x, y });
+      } else if (target.closest('.react-flow')) {
+        // Clicking on the ReactFlow pane itself
+        e.preventDefault();
+        const x = e.clientX;
+        const y = e.clientY;
+        setContextMenu({ x, y });
+      }
+    };
+
+    container.addEventListener('contextmenu', handleContainerContextMenu, true);
+    return () => {
+      container.removeEventListener('contextmenu', handleContainerContextMenu, true);
+    };
+  }, []);
+
   return (
     <div ref={containerRef} className="relative w-full h-full">
       <ReactFlow
@@ -428,7 +494,6 @@ export function ChartCanvas({
         elementsSelectable={true}
         proOptions={useMemo(() => ({ hideAttribution: true }), [])}
         onPaneClick={handlePaneClick}
-        onContextMenu={handleContextMenu}
         style={useMemo(() => ({ cursor: isAddingComment ? 'crosshair' : undefined }), [isAddingComment])}
       >
         <Background />

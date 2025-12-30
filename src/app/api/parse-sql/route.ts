@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse SQL and convert to diagram
+    console.log(`[parse-sql] databaseType received: ${databaseType}, type: ${typeof databaseType}`);
     const diagram = await sqlImportToDiagram({
       sqlContent: sql,
       sourceDatabaseType: databaseType ?? DatabaseType.GENERIC,
@@ -39,7 +40,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ diagram, durationMs }, { status: 200 });
   } catch (error) {
+    console.error('[parse-sql] Error:', error);
+    
     if (error instanceof z.ZodError) {
+      console.error('[parse-sql] Validation error:', error.errors);
       return NextResponse.json(
         { error: 'Invalid request', details: error.errors },
         { status: 400 }
@@ -47,12 +51,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Error) {
+      console.error('[parse-sql] Error message:', error.message);
+      console.error('[parse-sql] Error stack:', error.stack);
       return NextResponse.json(
         { error: error.message || 'Failed to parse SQL' },
         { status: 500 }
       );
     }
 
+    console.error('[parse-sql] Unknown error type:', typeof error, error);
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }

@@ -31,35 +31,50 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   const itemRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
 
   // Calculate position with bounds checking
-  const [position, setPosition] = React.useState({ x, y });
+  // Start with the input coordinates, adjust if needed
+  const [position, setPosition] = React.useState(() => ({ x, y }));
 
   React.useEffect(() => {
+    // Update position when x or y changes
+    setPosition({ x, y });
+    
     if (!menuRef.current) return;
 
-    const menu = menuRef.current;
-    const rect = menu.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const padding = 8;
+    // Use requestAnimationFrame to ensure the menu is fully rendered
+    const rafId = requestAnimationFrame(() => {
+      if (!menuRef.current) return;
 
-    let newX = x;
-    let newY = y;
+      const menu = menuRef.current;
+      const rect = menu.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const padding = 8;
 
-    // Adjust horizontal position if menu would overflow
-    if (x + rect.width > viewportWidth - padding) {
-      newX = viewportWidth - rect.width - padding;
-    } else if (x < padding) {
-      newX = padding;
-    }
+      // Only adjust if we have valid dimensions (menu is rendered)
+      if (rect.width > 0 && rect.height > 0) {
+        let newX = x;
+        let newY = y;
 
-    // Adjust vertical position if menu would overflow
-    if (y + rect.height > viewportHeight - padding) {
-      newY = viewportHeight - rect.height - padding;
-    } else if (y < padding) {
-      newY = padding;
-    }
+        // Adjust horizontal position if menu would overflow
+        if (x + rect.width > viewportWidth - padding) {
+          newX = Math.max(padding, viewportWidth - rect.width - padding);
+        } else if (x < padding) {
+          newX = padding;
+        }
 
-    setPosition({ x: newX, y: newY });
+        // Adjust vertical position if menu would overflow
+        if (y + rect.height > viewportHeight - padding) {
+          newY = Math.max(padding, viewportHeight - rect.height - padding);
+        } else if (y < padding) {
+          newY = padding;
+        }
+        
+        // Update position if it changed
+        setPosition({ x: newX, y: newY });
+      }
+    });
+
+    return () => cancelAnimationFrame(rafId);
   }, [x, y]);
 
   // Handle keyboard navigation
@@ -142,7 +157,10 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
+        // Ensure the menu is positioned correctly from the start
+        transform: 'translate(0, 0)',
       }}
+      data-debug-position={`x:${position.x},y:${position.y},input:${x},${y}`}
       onClick={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.preventDefault()}
     >
