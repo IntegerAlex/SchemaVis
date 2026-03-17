@@ -103,8 +103,18 @@ import { useToast } from './toast';
 
         sqlChangeDebounceRef.current = setTimeout(() => {
             parseMutation.mutate({ sql, databaseType });
+            sqlChangeDebounceRef.current = null;
         }, 400);
     }, [parseMutation]);
+
+    React.useEffect(() => {
+        return () => {
+            if (sqlChangeDebounceRef.current) {
+                clearTimeout(sqlChangeDebounceRef.current);
+                sqlChangeDebounceRef.current = null;
+            }
+        };
+    }, []);
 
     // Clear file info when parsing starts (to show loading state)
     React.useEffect(() => {
