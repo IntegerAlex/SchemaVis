@@ -101,4 +101,4 @@ function RightSidebarInner({
 }
 
 export const RightSidebar = React.memo(RightSidebarInner);
-
+RightSidebar.displayName = 'RightSidebar';
