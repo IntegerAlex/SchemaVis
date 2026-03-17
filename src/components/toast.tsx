@@ -24,15 +24,14 @@ const ToastContext = React.createContext<ToastContextValue | null>(null);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
 
+  const removeToast = React.useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   const showToast = React.useCallback(
     (message: string, type: 'info' | 'success' | 'error' = 'info') => {
       const id = Math.random().toString(36).slice(2);
       setToasts((prev) => [...prev, { id, message, type }]);
-
-      // Auto-remove after 3 seconds
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 3000);
     },
     []
   );
@@ -47,7 +46,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       showToast(`${userName} joined the diagram`, 'info');
     };
 
-    const handleUserLeft = (event: Event) => {
+    const handleUserLeft = () => {
       showToast('Someone left the diagram', 'info');
     };
 
@@ -63,7 +62,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, showToast }}>
       {children}
-      <ToastContainer toasts={toasts} />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
   );
 }
@@ -76,30 +75,31 @@ export function useToast() {
   return context;
 }
 
-function ToastContainer({ toasts }: { toasts: Toast[] }) {
+function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: string) => void }) {
   if (toasts.length === 0) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} />
+        <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
       ))}
     </div>
   );
 }
 
-function ToastItem({ toast }: { toast: Toast }) {
-  const [isVisible, setIsVisible] = React.useState(true);
+function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
+  const [isExiting, setIsExiting] = React.useState(false);
 
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-    }, 3000);
+    // Begin exit animation at 2700ms, fully remove at 3000ms
+    const exitTimer = setTimeout(() => setIsExiting(true), 2700);
+    const removeTimer = setTimeout(() => onRemove(toast.id), 3000);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!isVisible) return null;
+    return () => {
+      clearTimeout(exitTimer);
+      clearTimeout(removeTimer);
+    };
+  }, [toast.id, onRemove]);
 
   const typeStyles = {
     info: 'bg-blue-600 border-blue-500',
@@ -111,13 +111,10 @@ function ToastItem({ toast }: { toast: Toast }) {
     <div
       className={cn(
         'px-4 py-3 rounded-lg border shadow-lg text-white text-sm font-medium pointer-events-auto',
-        'transition-all duration-300 ease-in-out',
-        typeStyles[toast.type]
+        typeStyles[toast.type],
+        isExiting ? 'animate-toast-out' : 'animate-toast-in'
       )}
       role="alert"
-      style={{
-        animation: 'slideIn 0.3s ease-out',
-      }}
     >
       {toast.message}
     </div>

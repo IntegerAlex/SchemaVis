@@ -344,10 +344,9 @@ export function ChartCanvas({
       
       // Ensure we have valid coordinates
       if (typeof x === 'number' && typeof y === 'number' && !isNaN(x) && !isNaN(y) && x >= 0 && y >= 0) {
-        console.log('[ContextMenu] Setting position:', { x, y, clientX: e.clientX, clientY: e.clientY, nativeClientX: nativeEvent.clientX, nativeClientY: nativeEvent.clientY });
         setContextMenu({ x, y });
       } else {
-        console.error('[ContextMenu] Invalid coordinates:', { x, y, clientX: e.clientX, clientY: e.clientY, nativeEvent });
+        // Invalid coordinates, menu will not be shown
       }
     },
     []
@@ -456,7 +455,6 @@ export function ChartCanvas({
         // Use viewport coordinates directly from the native event
         const x = e.clientX;
         const y = e.clientY;
-        console.log('[ContextMenu] Setting menu at:', { x, y });
         setContextMenu({ x, y });
       } else if (target.closest('.react-flow')) {
         // Clicking on the ReactFlow pane itself

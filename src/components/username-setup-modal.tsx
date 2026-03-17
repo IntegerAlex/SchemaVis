@@ -146,7 +146,7 @@ export function UsernameSetupModal({ isOpen, onSuccess }: UsernameSetupModalProp
       }}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300" />
       
       {/* Dialog */}
       <div
@@ -154,7 +154,8 @@ export function UsernameSetupModal({ isOpen, onSuccess }: UsernameSetupModalProp
           'relative z-50 w-full max-w-md mx-4',
           'bg-white/5 backdrop-blur-2xl border border-white/10',
           'rounded-2xl shadow-[0_20px_70px_-30px_rgba(59,130,246,0.45)]',
-          'p-6'
+          'p-6',
+          'animate-in fade-in zoom-in-95 duration-200'
         )}
         onClick={(e) => e.stopPropagation()}
       >

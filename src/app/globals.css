@@ -68,3 +68,76 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Toast slide-in from the right */
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Toast slide-out to the right */
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.animate-toast-in {
+  animation: toastIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-toast-out {
+  animation: toastOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Delete dialog warning icon shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px) rotate(-3deg); }
+  40%       { transform: translateX(5px) rotate(3deg); }
+  60%       { transform: translateX(-4px) rotate(-2deg); }
+  80%       { transform: translateX(4px) rotate(2deg); }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Avatar scale-in on join */
+@keyframes avatarIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-avatar-in {
+  animation: avatarIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Table field staggered fade-in on expand */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -107,7 +107,7 @@ export function DeleteConfirmDialog({
     >
       {/* Backdrop with blur */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
         aria-hidden="true"
       />
 
@@ -150,7 +150,7 @@ export function DeleteConfirmDialog({
               'shrink-0'
             )}
           >
-            <AlertTriangle className="size-6 text-red-400" />
+            <AlertTriangle className="size-6 text-red-400 animate-shake" />
           </div>
           <div className="flex-1 min-w-0">
             <h3

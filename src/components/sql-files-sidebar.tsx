@@ -7,7 +7,6 @@
 
 import * as React from 'react';
 import { FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useSqlFiles } from '@/hooks/use-sql-files';
@@ -41,7 +40,6 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const { data, isLoading, error, refetch } = useSqlFiles();
   const { parseMutation } = useParseSQLContext();
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   const handleFileClick = React.useCallback(
     async (fileId: number) => {
@@ -94,9 +92,6 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
         // Invalidate and refetch the files list
         await queryClient.invalidateQueries({ queryKey: ['sql-files'] });
         await refetch();
-        
-        // Hard refresh the page to rerender everything
-        window.location.href = '/app';
       } catch (error) {
         console.error('Error deleting SQL file:', error);
         // Show error toast or notification here if you have one
@@ -104,7 +99,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
         setDeletingId(null);
       }
     },
-    [confirmDelete, queryClient, refetch, router]
+    [confirmDelete, queryClient, refetch]
   );
 
   const handleDeleteCancel = React.useCallback(() => {

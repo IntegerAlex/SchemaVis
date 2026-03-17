@@ -27,6 +27,7 @@ import { useOptionalCollaboration } from '@/context/collaboration-context';
 // import type { CommentData } from '@/lib/collaboration/types';
 import { detectDatabaseType } from '@/lib/parsers';
 import { DatabaseType } from '@/lib/domain/database-type';
+import { useToast } from './toast';
 
     interface VisualizerLayoutProps {
     className?: string;
@@ -64,18 +65,22 @@ import { DatabaseType } from '@/lib/domain/database-type';
     const [sidebarMode, setSidebarMode] = React.useState<'main' | 'sql-input'>('main');
     const queryClient = useQueryClient();
     const collaboration = useOptionalCollaboration();
+    const { showToast } = useToast();
 
     // Shared function to handle SQL content loading (from file upload or sidebar)
     const handleSQLContent = React.useCallback((sqlContent: string, fileName: string) => {
         // Detect database type using chartdb's robust detection engine
         const detectedType = detectDatabaseType(sqlContent);
-        const displayType = formatDatabaseTypeForDisplay(detectedType) || 'PostgreSQL'; // Default to PostgreSQL if null
-        setDetectedDatabaseType(displayType);
+        const displayType = formatDatabaseTypeForDisplay(detectedType);
+        if (!displayType) {
+            showToast('Could not detect SQL dialect — defaulting to PostgreSQL. You can change this in the selector.', 'info');
+        }
+        setDetectedDatabaseType(displayType || 'PostgreSQL');
         setSelectedFileName(fileName);
         
         // Parse the SQL
         parseMutation.mutate({ sql: sqlContent });
-    }, [parseMutation]);
+    }, [parseMutation, showToast]);
 
     // Handle SQL changes from the SQL input sidebar
     const handleSqlInputChange = React.useCallback((sql: string, databaseType: DatabaseType) => {
@@ -195,6 +200,11 @@ import { DatabaseType } from '@/lib/domain/database-type';
             console.error('Error reading file:', error);
             setSelectedFileName(null);
             setDetectedDatabaseType(null);
+        } finally {
+            // Reset file input so the same file can be re-uploaded
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
         },
         [handleSQLContent, queryClient]
