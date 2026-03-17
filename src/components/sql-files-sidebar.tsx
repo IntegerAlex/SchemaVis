@@ -37,7 +37,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const [collapsed, setCollapsed] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = React.useState<{ fileId: number; fileName: string } | null>(null);
-  const { data, isLoading, error, refetch } = useSqlFiles();
+  const { data, isLoading, error } = useSqlFiles();
   const { parseMutation } = useParseSQLContext();
   const queryClient = useQueryClient();
 
@@ -89,9 +89,8 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
           throw new Error('Failed to delete file');
         }
 
-        // Invalidate and refetch the files list
+        // Invalidate the files list; active queries will refetch automatically
         await queryClient.invalidateQueries({ queryKey: ['sql-files'] });
-        await refetch();
       } catch (error) {
         console.error('Error deleting SQL file:', error);
         // Show error toast or notification here if you have one
@@ -99,7 +98,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
         setDeletingId(null);
       }
     },
-    [confirmDelete, queryClient, refetch]
+    [confirmDelete, queryClient]
   );
 
   const handleDeleteCancel = React.useCallback(() => {
