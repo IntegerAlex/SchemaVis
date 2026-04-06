@@ -9,7 +9,10 @@ export const generateDiagramId = () => {
   return randomId(29);
 };
 
-export const deepCopy = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+export const deepCopy = <T>(obj: T): T => {
+  if (obj === null || obj === undefined) return obj;
+  return JSON.parse(JSON.stringify(obj));
+};
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);

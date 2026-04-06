@@ -115,8 +115,8 @@ describe('SQL Import', () => {
         sourceDatabaseType: DatabaseType.POSTGRESQL,
       });
 
-      expect(diagram.tables).toHaveLength(1);
-      expect(diagram.tables[0].name).toBe('users');
+      expect(diagram.tables!).toHaveLength(1);
+      expect(diagram.tables![0].name).toBe('users');
     });
 
     it('should convert MySQL SQL to diagram', async () => {
@@ -132,8 +132,8 @@ describe('SQL Import', () => {
         sourceDatabaseType: DatabaseType.MYSQL,
       });
 
-      expect(diagram.tables).toHaveLength(1);
-      expect(diagram.tables[0].name).toBe('users');
+      expect(diagram.tables!).toHaveLength(1);
+      expect(diagram.tables![0].name).toBe('users');
     });
 
     it('should convert SQLite SQL to diagram', async () => {
@@ -149,8 +149,8 @@ describe('SQL Import', () => {
         sourceDatabaseType: DatabaseType.SQLITE,
       });
 
-      expect(diagram.tables).toHaveLength(1);
-      expect(diagram.tables[0].name).toBe('users');
+      expect(diagram.tables!).toHaveLength(1);
+      expect(diagram.tables![0].name).toBe('users');
     });
 
     it('should convert Oracle SQL to diagram', async () => {
@@ -166,8 +166,8 @@ describe('SQL Import', () => {
         sourceDatabaseType: DatabaseType.ORACLE,
       });
 
-      expect(diagram.tables).toHaveLength(1);
-      expect(diagram.tables[0].name).toBe('users');
+      expect(diagram.tables!).toHaveLength(1);
+      expect(diagram.tables![0].name).toBe('users');
     });
 
     it('should convert SQL Server SQL to diagram', async () => {
@@ -183,8 +183,8 @@ describe('SQL Import', () => {
         sourceDatabaseType: DatabaseType.SQL_SERVER,
       });
 
-      expect(diagram.tables).toHaveLength(1);
-      expect(diagram.tables[0].name).toBe('users');
+      expect(diagram.tables!).toHaveLength(1);
+      expect(diagram.tables![0].name).toBe('users');
     });
 
     it('should auto-detect database type when GENERIC', async () => {
@@ -199,7 +199,7 @@ describe('SQL Import', () => {
         sourceDatabaseType: DatabaseType.GENERIC,
       });
 
-      expect(diagram.tables).toHaveLength(1);
+      expect(diagram.tables!).toHaveLength(1);
     });
   });
 

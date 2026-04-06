@@ -37,7 +37,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const [collapsed, setCollapsed] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = React.useState<{ fileId: number; fileName: string } | null>(null);
-  const { data, isLoading, error } = useSqlFiles();
+  const { data, isLoading, error, refetch } = useSqlFiles();
   const { parseMutation } = useParseSQLContext();
   const queryClient = useQueryClient();
 

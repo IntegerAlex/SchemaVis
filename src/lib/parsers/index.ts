@@ -137,12 +137,7 @@ export function detectDatabaseType(sqlContent: string): DatabaseType | null {
         return DatabaseType.MYSQL;
     }
 
-    // Check for Oracle format
-    if (isOracleFormat(sqlContent)) {
-        return DatabaseType.ORACLE;
-    }
-
-    // Look for database-specific keywords (check PostgreSQL before SQLite to avoid false positives)
+    // Look for database-specific keywords (check PostgreSQL before Oracle/SQLite to avoid false positives)
     if (
         sqlContent.includes('SERIAL PRIMARY KEY') ||
         sqlContent.includes('CREATE EXTENSION') ||
@@ -153,6 +148,11 @@ export function detectDatabaseType(sqlContent: string): DatabaseType | null {
         sqlContent.includes('pg_catalog')
     ) {
         return DatabaseType.POSTGRESQL;
+    }
+
+    // Check for Oracle format
+    if (isOracleFormat(sqlContent)) {
+        return DatabaseType.ORACLE;
     }
 
     if (
@@ -186,7 +186,7 @@ export async function sqlImportToDiagram({
 }: {
     sqlContent: string;
     sourceDatabaseType: DatabaseType;
-    targetDatabaseType: DatabaseType;
+    targetDatabaseType?: DatabaseType;
 }): Promise<Diagram> {
     // Normalize database type in case it comes as a string
     let dbType = sourceDatabaseType;
@@ -297,22 +297,34 @@ export async function parseSQLError({
 }> {
     try {
         // Route to appropriate parser based on database type
+        let result: SQLParserResult & { warnings?: string[] };
         if (sourceDatabaseType === DatabaseType.POSTGRESQL) {
             if (isPgDumpFormat(sqlContent)) {
-                await fromPostgresDump(sqlContent);
+                result = await fromPostgresDump(sqlContent);
             } else {
-                await fromPostgres(sqlContent);
+                result = await fromPostgres(sqlContent);
             }
         } else if (sourceDatabaseType === DatabaseType.MYSQL || sourceDatabaseType === DatabaseType.MARIADB) {
-            await fromMySQL(sqlContent);
+            result = await fromMySQL(sqlContent);
         } else if (sourceDatabaseType === DatabaseType.SQLITE) {
-            await fromSQLite(sqlContent);
+            result = await fromSQLite(sqlContent);
         } else if (sourceDatabaseType === DatabaseType.ORACLE) {
-            await fromOracle(sqlContent);
+            result = await fromOracle(sqlContent);
         } else if (sourceDatabaseType === DatabaseType.SQL_SERVER) {
-            await fromSQLServer(sqlContent);
+            result = await fromSQLServer(sqlContent);
         } else {
             throw new Error(`Unsupported database type: ${sourceDatabaseType}`);
+        }
+
+        // Check if there were any parsing failures reported as warnings
+        if (result.warnings && result.warnings.length > 0) {
+            const parseError = result.warnings.find(w => w.includes('Failed to parse statement'));
+            if (parseError) {
+                return {
+                    success: false,
+                    error: parseError
+                };
+            }
         }
 
         return { success: true };

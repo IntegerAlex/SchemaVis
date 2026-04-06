@@ -298,13 +298,15 @@ function parseCreateTableManually(
     tableMap: Record<string, string>,
     relationships: SQLForeignKey[]
 ): void {
-    // Extract table name and schema (handling square brackets)
+    // Extract table name and schema (handling square brackets with spaces)
+    // Supports: TableName, [TableName], schema.TableName, [schema].[TableName], etc.
     const tableMatch = statement.match(
-        /CREATE\s+TABLE\s+(?:\[?(\w+)\]?\.)??\[?(\w+)\]?\s*\(/i
+        /CREATE\s+TABLE\s+(?:(?:\[([^\]]+)\]|(\w+))\.)?(?:\[([^\]]+)\]|(\w+))\s*\(/i
     );
     if (!tableMatch) return;
 
-    const [, schema = 'dbo', tableName] = tableMatch;
+    const schema = tableMatch[1] || tableMatch[2] || 'dbo';
+    const tableName = tableMatch[3] || tableMatch[4];
 
     // Generate table ID
     const tableId = generateId();
@@ -347,22 +349,20 @@ function parseCreateTableManually(
         // Format: FOREIGN KEY (column) REFERENCES Table(column)
         if (part.match(/^\s*FOREIGN\s+KEY/i)) {
             const fkMatch = part.match(
-                /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+(?:\[?(\w+)\]?\.)??\[?(\w+)\]?\s*\(([^)]+)\)/i
+                /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+(?:(?:\[([^\]]+)\]|(\w+))\.)?(?:\[([^\]]+)\]|(\w+))\s*\(([^)]+)\)/i
             );
             if (fkMatch) {
-                const [
-                    ,
-                    sourceCol,
-                    targetSchema = 'dbo',
-                    targetTable,
-                    targetCol,
-                ] = fkMatch;
+                const sourceCol = fkMatch[1];
+                const targetSchema = fkMatch[2] || fkMatch[3] || 'dbo';
+                const targetTable = fkMatch[4] || fkMatch[5];
+                const targetCol = fkMatch[6];
+                
                 relationships.push({
                     name: `FK_${tableName}_${sourceCol.trim().replace(/\[|\]/g, '')}`,
                     sourceTable: tableName,
                     sourceSchema: schema,
                     sourceColumn: sourceCol.trim().replace(/\[|\]/g, ''),
-                    targetTable: targetTable || targetSchema,
+                    targetTable: targetTable,
                     targetSchema: targetTable ? targetSchema : 'dbo',
                     targetColumn: targetCol.trim().replace(/\[|\]/g, ''),
                     sourceTableId: tableId,
@@ -397,10 +397,11 @@ function parseCreateTableManually(
         if (part.match(/^\s*CONSTRAINT/i)) {
             // Parse constraints
             const constraintMatch = part.match(
-                /CONSTRAINT\s+\[?(\w+)\]?\s+(PRIMARY\s+KEY|UNIQUE|FOREIGN\s+KEY)/i
+                /CONSTRAINT\s+(?:\[([^\]]+)\]|(\w+))\s+(PRIMARY\s+KEY|UNIQUE|FOREIGN\s+KEY)/i
             );
             if (constraintMatch) {
-                const [, constraintName, constraintType] = constraintMatch;
+                const constraintName = constraintMatch[1] || constraintMatch[2];
+                const constraintType = constraintMatch[3];
 
                 if (constraintType.match(/PRIMARY\s+KEY/i)) {
                     // Extract columns from PRIMARY KEY constraint - handle multi-line format
@@ -444,16 +445,14 @@ function parseCreateTableManually(
                 } else if (constraintType.match(/FOREIGN\s+KEY/i)) {
                     // Parse foreign key constraint
                     const fkMatch = part.match(
-                        /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+(?:\[?(\w+)\]?\.)??\[?(\w+)\]?\s*\(([^)]+)\)/i
+                        /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+(?:(?:\[([^\]]+)\]|(\w+))\.)?(?:\[([^\]]+)\]|(\w+))\s*\(([^)]+)\)/i
                     );
                     if (fkMatch) {
-                        const [
-                            ,
-                            sourceCol,
-                            targetSchema = 'dbo',
-                            targetTable,
-                            targetCol,
-                        ] = fkMatch;
+                        const sourceCol = fkMatch[1];
+                        const targetSchema = fkMatch[2] || fkMatch[3] || 'dbo';
+                        const targetTable = fkMatch[4] || fkMatch[5];
+                        const targetCol = fkMatch[6];
+                        
                         relationships.push({
                             name: constraintName,
                             sourceTable: tableName,
@@ -477,8 +476,9 @@ function parseCreateTableManually(
 
         // Parse column definition - handle both numeric args and 'max'
         // Handle brackets around column names and types
+        // Group 1/2: col name, Group 3/4: base type, Group 5: type args, Group 6: rest
         let columnMatch = part.match(
-            /^\s*\[?(\w+)\]?\s+\[?(\w+)\]?(?:\s*\(\s*([\d,\s]+|max)\s*\))?(.*)$/i
+            /^\s*(?:\[([^\]]+)\]|(\w+))\s+(?:\[([^\]]+)\]|(\w+))(?:\s*\(\s*([\d,\s]+|max)\s*\))?(.*)$/i
         );
 
         // If no match, try pattern for preprocessed types without parentheses
@@ -489,12 +489,15 @@ function parseCreateTableManually(
         // Handle unusual format: [COLUMN_NAME] (VARCHAR)(32)
         if (!columnMatch) {
             columnMatch = part.match(
-                /^\s*\[?(\w+)\]?\s+\((\w+)\)\s*\(([\d,\s]+|max)\)(.*)$/i
+                /^\s*(?:\[([^\]]+)\]|(\w+))\s+\((?:\[([^\]]+)\]|(\w+))\)\s*\(([\d,\s]+|max)\)(.*)$/i
             );
         }
 
         if (columnMatch) {
-            const [, colName, baseType, typeArgs, rest] = columnMatch;
+            const colName = columnMatch[1] || columnMatch[2];
+            const baseType = columnMatch[3] || columnMatch[4];
+            const typeArgs = columnMatch[5];
+            const rest = columnMatch[6];
 
             if (
                 colName &&
