@@ -15,6 +15,7 @@ import { HonestAssessment } from '@/components/comparison/honest-assessment';
 import { WhenToChoose } from '@/components/comparison/when-to-choose';
 import { RoadmapSection } from '@/components/comparison/roadmap-section';
 import { CompetitorLogo } from '@/components/comparison/competitor-logo';
+import { ComparisonDisclaimer } from '@/components/comparison/comparison-disclaimer';
 
 const competitor = getCompetitorById('drawdb')!;
 
@@ -144,7 +145,7 @@ export default function DrawDBComparisonPage() {
                 </a>
               </Button>
               <Button asChild size="lg" className="w-full">
-                <Link href="/app">Try SchemaVis Free Forever</Link>
+                <Link href="/app">Try SchemaVis Free</Link>
               </Button>
             </div>
           </section>
@@ -161,6 +162,8 @@ export default function DrawDBComparisonPage() {
               <Link href="/contact">Share Feedback</Link>
             </Button>
           </section>
+
+          <ComparisonDisclaimer competitorName="DrawDB" />
         </div>
       </div>
     </div>

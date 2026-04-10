@@ -275,7 +275,7 @@ export const competitors: Competitor[] = [
   },
   {
     id: 'chartsdb',
-    name: 'chartsdb',
+    name: 'ChartDB',
     website: 'https://chartdb.io',
     logoUrl: 'https://chartdb.io/favicon.ico',
     description: 'Open source database visualization tool with excellent visual quality, focused on PostgreSQL.',
@@ -316,13 +316,13 @@ export const schemavisCompetitor: Competitor = {
   id: 'schemavis',
   name: 'SchemaVis',
   website: 'https://schemavis.gossorg.in',
-  description: 'Alpha-stage open source database visualization tool focused on real-time collaboration and modern visualization.',
+  description: 'Alpha-stage open source database visualization tool focused on modern visualization with planned collaboration features.',
   strengths: [
     'Open source (AGPL)',
-    'Real-time collaboration (planned)',
     'Modern React architecture',
-    'Free forever',
+    'Free to use',
     'Multi-database support',
+    'Real-time collaboration (planned)',
   ],
   weaknesses: [
     'Alpha stage (not production-ready)',
@@ -331,9 +331,9 @@ export const schemavisCompetitor: Competitor = {
     'Basic mobile support',
     'Steeper learning curve due to alpha roughness',
   ],
-  pricing: 'Free Forever',
+  pricing: 'Free',
   openSource: true,
-  collaboration: true, // Planned
+  collaboration: false, // Not yet available; planned for future release
   visualQuality: 3,
   relationshipDisplay: 'Good',
   modernUI: true,
@@ -347,7 +347,6 @@ export const schemavisCompetitor: Competitor = {
   bestFor: [
     'Early adopters',
     'Open source advocates',
-    'Teams needing collaboration',
     'Users who want to influence development',
   ],
 };
