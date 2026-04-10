@@ -77,7 +77,7 @@ function UserAvatar({ user, style }: UserAvatarProps) {
   const roleLabel = user.role === 'owner' ? 'Owner' : user.role === 'editor' ? 'Editor' : 'Viewer';
 
   return (
-    <div className="relative group" style={style}>
+    <div className="relative group animate-avatar-in" style={style}>
       {user.imageUrl ? (
         <img
           src={user.imageUrl}
@@ -161,7 +161,10 @@ export function ConnectionStatus() {
   return (
     <div className="flex items-center gap-2 text-xs text-zinc-400">
       <div
-        className="size-2 rounded-full"
+        className={cn(
+          'size-2 rounded-full',
+          (connectionState === 'connecting' || connectionState === 'reconnecting') && 'animate-pulse'
+        )}
         style={{ backgroundColor: status.color }}
         aria-label={`${status.label} - ${mode}`}
       />

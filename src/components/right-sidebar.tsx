@@ -21,7 +21,7 @@ interface RightSidebarProps {
   className?: string;
 }
 
-export function RightSidebar({
+function RightSidebarInner({
   onCommentsClick,
   onShareClick,
   isCommentsOpen,
@@ -100,3 +100,5 @@ export function RightSidebar({
   );
 }
 
+export const RightSidebar = React.memo(RightSidebarInner);
+RightSidebar.displayName = 'RightSidebar';

@@ -27,6 +27,7 @@ import { useOptionalCollaboration } from '@/context/collaboration-context';
 // import type { CommentData } from '@/lib/collaboration/types';
 import { detectDatabaseType } from '@/lib/parsers';
 import { DatabaseType } from '@/lib/domain/database-type';
+import { useToast } from './toast';
 
     interface VisualizerLayoutProps {
     className?: string;
@@ -64,24 +65,56 @@ import { DatabaseType } from '@/lib/domain/database-type';
     const [sidebarMode, setSidebarMode] = React.useState<'main' | 'sql-input'>('main');
     const queryClient = useQueryClient();
     const collaboration = useOptionalCollaboration();
+    const { showToast } = useToast();
+
+    const handleShareClick = React.useCallback(() => {
+      setIsShareDialogOpen(true);
+    }, []);
+
+    const handleCommentsClick = React.useCallback(() => {
+      // Comments feature disabled
+      // Intentionally left empty but stable for memoized sidebar
+    }, []);
 
     // Shared function to handle SQL content loading (from file upload or sidebar)
     const handleSQLContent = React.useCallback((sqlContent: string, fileName: string) => {
         // Detect database type using chartdb's robust detection engine
         const detectedType = detectDatabaseType(sqlContent);
-        const displayType = formatDatabaseTypeForDisplay(detectedType) || 'PostgreSQL'; // Default to PostgreSQL if null
-        setDetectedDatabaseType(displayType);
+        const displayType = formatDatabaseTypeForDisplay(detectedType);
+        if (!displayType) {
+            showToast('Could not detect SQL dialect — defaulting to PostgreSQL. You can change this in the selector.', 'info');
+        }
+        setDetectedDatabaseType(displayType || 'PostgreSQL');
         setSelectedFileName(fileName);
         
         // Parse the SQL
         parseMutation.mutate({ sql: sqlContent });
+    }, [parseMutation, showToast]);
+
+    // Debounced handler for SQL changes from the SQL input sidebar
+    // This prevents the entire diagram area from re-parsing on every keystroke,
+    // which in turn reduces unnecessary re-renders outside the canvas.
+    const sqlChangeDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSqlInputChange = React.useCallback((sql: string, databaseType: DatabaseType) => {
+        if (sqlChangeDebounceRef.current) {
+            clearTimeout(sqlChangeDebounceRef.current);
+        }
+
+        sqlChangeDebounceRef.current = setTimeout(() => {
+            parseMutation.mutate({ sql, databaseType });
+            sqlChangeDebounceRef.current = null;
+        }, 400);
     }, [parseMutation]);
 
-    // Handle SQL changes from the SQL input sidebar
-    const handleSqlInputChange = React.useCallback((sql: string, databaseType: DatabaseType) => {
-        // Update the parse mutation with both sql and databaseType
-        parseMutation.mutate({ sql, databaseType });
-    }, [parseMutation]);
+    React.useEffect(() => {
+        return () => {
+            if (sqlChangeDebounceRef.current) {
+                clearTimeout(sqlChangeDebounceRef.current);
+                sqlChangeDebounceRef.current = null;
+            }
+        };
+    }, []);
 
     // Clear file info when parsing starts (to show loading state)
     React.useEffect(() => {
@@ -195,6 +228,11 @@ import { DatabaseType } from '@/lib/domain/database-type';
             console.error('Error reading file:', error);
             setSelectedFileName(null);
             setDetectedDatabaseType(null);
+        } finally {
+            // Reset file input so the same file can be re-uploaded
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
         },
         [handleSQLContent, queryClient]
@@ -418,8 +456,8 @@ import { DatabaseType } from '@/lib/domain/database-type';
           </SignedIn>
 
           {/* Canvas */}
-          <div className="flex-1 overflow-hidden bg-slate-900/40 backdrop-blur-xl px-4 pb-6 pt-4 relative">
-            <div className="h-full w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_-30px_rgba(59,130,246,0.45)]">
+          <div className="flex-1 overflow-hidden bg-slate-950 px-4 pb-6 pt-4 relative">
+            <div className="h-full w-full rounded-2xl border border-white/10 bg-slate-900">
             <ReactFlowProvider>
             {parseMutation.isPending ? (
                 <div className="flex items-center justify-center h-full">
@@ -461,11 +499,9 @@ import { DatabaseType } from '@/lib/domain/database-type';
           <SignedIn>
             {diagram && (
               <RightSidebar
-                // Comments feature disabled
-                // onCommentsClick={() => setIsCommentsPanelOpen((prev) => !prev)}
-                onCommentsClick={() => {}} // Disabled
-                onShareClick={() => setIsShareDialogOpen(true)}
-                isCommentsOpen={false} // Disabled
+                onCommentsClick={handleCommentsClick}
+                onShareClick={handleShareClick}
+                isCommentsOpen={false}
                 showShare={!!diagram}
               />
             )}

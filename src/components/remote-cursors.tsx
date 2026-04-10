@@ -90,7 +90,7 @@ function RemoteCursor({ cursor, userName }: RemoteCursorProps) {
 
       {/* Name label */}
       <div
-        className="absolute left-4 top-4 px-2 py-0.5 rounded text-xs font-medium text-white whitespace-nowrap"
+        className="absolute left-4 top-4 px-2 py-0.5 rounded text-xs font-medium text-white whitespace-nowrap max-w-[120px] truncate"
         style={{
           backgroundColor: color,
           boxShadow: '0 1px 3px rgba(0,0,0,0.3)',

@@ -25,6 +25,7 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
   const { data, selected, dragging } = props;
   const { table, isDimmed, isExpanded, onToggleExpand, relatedFieldIds } = data;
   const maxCollapsed = 10;
+  const fieldStaggerDelayMs = 30;
 
   const visibleFields: DBField[] = useMemo(() => {
     if (isExpanded || table.fields.length <= maxCollapsed) return table.fields;
@@ -49,10 +50,10 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
   return (
     <div
       className={cn(
-        'relative bg-white dark:bg-zinc-800 border-2 rounded-lg shadow-lg min-w-[200px] transition-all',
+        'relative bg-white dark:bg-zinc-800 border-2 rounded-lg shadow-lg min-w-[200px] transition-all duration-200',
         selected
           ? 'z-20 border-blue-500 dark:border-blue-400 ring-2 ring-blue-500/30 brightness-110 contrast-110 shadow-xl'
-          : 'z-0 border-zinc-300 dark:border-zinc-600',
+          : 'z-0 border-zinc-300 dark:border-zinc-600 hover:shadow-xl hover:border-zinc-400 dark:hover:border-zinc-500',
         dragging && 'opacity-80',
         isDimmed && !selected ? 'opacity-50 brightness-75' : ''
       )}
@@ -70,10 +71,15 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
       <div
         className="relative divide-y divide-zinc-200 dark:divide-zinc-700"
       >
-        {visibleFields.map((field) => (
+        {visibleFields.map((field, index) => (
           <div
             key={field.id}
             className="px-4 py-2 text-sm flex items-center justify-between relative"
+            style={
+              isExpanded && index >= maxCollapsed
+                ? { animation: `fadeSlideIn 200ms ${(index - maxCollapsed) * fieldStaggerDelayMs}ms both` }
+                : undefined
+            }
           >
             {/* Source handle (right side) for outgoing relationships */}
             <Handle
