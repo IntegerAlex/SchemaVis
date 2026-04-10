@@ -78,8 +78,8 @@ export default function DrawSQLComparisonPage() {
               DrawSQL offers real-time collaboration in its Pro version and has
               a free tier (limited to public diagrams). SchemaVis is an
               alpha-stage newcomer focused on a different vision - open source
-              collaboration and modern architecture. This comparison focuses
-              exclusively on visualization capabilities.
+              and modern architecture with planned collaboration features. This
+              comparison focuses exclusively on visualization capabilities.
             </p>
           </header>
 

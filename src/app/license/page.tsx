@@ -32,7 +32,7 @@ export default function LicensePage() {
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">2. Origin of License Obligations</h2>
             <p>
-              SchemaVis incorporates code derived from chartsdb, which is licensed under the AGPL-3.0. Under Section 5 of the AGPL-3.0, any work based on AGPL-licensed software must be distributed under the same license terms. Therefore, SchemaVis as a whole is subject to the AGPL-3.0 license.
+              SchemaVis incorporates code derived from chartdb, which is licensed under the AGPL-3.0. Under Section 5 of the AGPL-3.0, any work based on AGPL-licensed software must be distributed under the same license terms. Therefore, SchemaVis as a whole is subject to the AGPL-3.0 license.
             </p>
           </section>
 
@@ -122,7 +122,7 @@ export default function LicensePage() {
           </section>
 
           <p className="text-sm text-slate-400 mt-8">
-            Last Updated: December 20, 2025
+            Last Updated: April 10, 2026
           </p>
         </div>
       </div>

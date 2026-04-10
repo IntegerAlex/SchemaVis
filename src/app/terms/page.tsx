@@ -20,7 +20,7 @@ export default function TermsPage() {
         </Button>
 
         <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
-        <p className="text-slate-400 mb-8">Last Updated: December 20, 2025</p>
+        <p className="text-slate-400 mb-8">Last Updated: April 10, 2026</p>
 
         <div className="prose prose-invert max-w-none space-y-6 text-slate-300">
           <section>
@@ -32,16 +32,20 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">2. Description of Service</h2>
-            <p>SchemaVis provides a web-based platform for creating, visualizing, and collaborating on database schema diagrams. The Service includes:</p>
+            <p>SchemaVis provides a web-based platform for creating, visualizing, and sharing database schema diagrams. The Service currently includes:</p>
             <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
               <li>SQL file upload and parsing to generate ER-style diagrams</li>
               <li>Interactive diagram creation and editing tools</li>
               <li>Database schema visualization with table relationships</li>
+              <li>Diagram sharing with links and permission management</li>
+            </ul>
+            <p className="mt-4">The following features are planned for future releases and may not yet be available:</p>
+            <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
               <li>Real-time collaboration features with presence indicators</li>
               <li>Comments and annotations on diagrams</li>
-              <li>Diagram sharing with public links and permission management</li>
               <li>Role-based access control (Owner, Editor, Viewer)</li>
             </ul>
+            <p className="mt-4 text-sm text-slate-400">SchemaVis is currently in alpha stage. Features and availability are subject to change.</p>
           </section>
 
           <section>
@@ -118,16 +122,16 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">6. Collaboration Features</h2>
+            <h2 className="text-2xl font-semibold text-white mb-4">6. Collaboration and Sharing Features</h2>
 
             <h3 className="text-xl font-semibold text-white mt-4 mb-2">6.1. Shared Diagrams</h3>
-            <p>When you share diagrams with others, you grant them permissions based on the role you assign (viewer, editor, or owner). You are responsible for managing these permissions appropriately.</p>
+            <p>When you share diagrams with others via share links, you are responsible for managing access appropriately.</p>
 
-            <h3 className="text-xl font-semibold text-white mt-4 mb-2">6.2. Real-time Collaboration</h3>
-            <p>Our real-time collaboration features use Server-Sent Events (SSE) technology to provide low-latency presence updates. Network conditions may affect performance.</p>
+            <h3 className="text-xl font-semibold text-white mt-4 mb-2">6.2. Planned Collaboration Features</h3>
+            <p>We are developing real-time collaboration features including presence indicators and cursor tracking. These features may not yet be available. When available, network conditions may affect performance.</p>
 
             <h3 className="text-xl font-semibold text-white mt-4 mb-2">6.3. Public Sharing</h3>
-            <p>You may create public share links for your diagrams. When you share a diagram publicly, anyone with the link can access it according to the permissions you set (view or edit). You are responsible for managing public access to your content.</p>
+            <p>You may create share links for your diagrams. When you share a diagram, anyone with the link can access it according to the permissions you set. You are responsible for managing access to your content.</p>
           </section>
 
           <section>
@@ -142,7 +146,7 @@ export default function TermsPage() {
             </ul>
 
             <h3 className="text-xl font-semibold text-white mt-4 mb-2">7.2. AGPL-3.0 Compliance</h3>
-            <p>As SchemaVis incorporates code derived from AGPL-3.0 licensed software (including chartsdb), the Service as a whole is subject to AGPL-3.0 terms. This does not affect your ownership of User Content, but does grant you specific rights regarding the software itself:</p>
+            <p>As SchemaVis incorporates code derived from AGPL-3.0 licensed software (including chartdb), the Service as a whole is subject to AGPL-3.0 terms. This does not affect your ownership of User Content, but does grant you specific rights regarding the software itself:</p>
             <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
               <li>You may request and receive the complete source code</li>
               <li>You may modify the source code for your own use</li>

@@ -58,10 +58,10 @@ export function HonestAssessment({ competitor }: HonestAssessmentProps) {
           <p className="text-sm text-blue-200">
             <strong className="text-blue-100">Our Vision:</strong> We're not
             trying to compete directly with {competitor.name} today. Instead,
-            we're building toward something different - a truly collaborative,
-            open source visualization tool that puts user feedback at the
-            center. If you're patient and want to help shape the future, we'd
-            love to have you as an early user.
+            we're building toward something different - an open source
+            visualization tool with planned collaboration features that puts
+            user feedback at the center. If you're patient and want to help
+            shape the future, we'd love to have you as an early user.
           </p>
         </div>
       </div>
