@@ -41,9 +41,9 @@ export function WhenToChoose({ competitor }: WhenToChooseProps) {
             {[
               'You value open source software (AGPL licensed)',
               'You want to influence development direction',
-              'Real-time team collaboration is important to your workflow',
               "You're comfortable with alpha software and providing feedback",
               'You want to help shape the future of database visualization',
+              'You want planned real-time collaboration features',
             ].map((reason, idx) => (
               <li key={idx} className="flex items-start gap-2 text-slate-300">
                 <Check className="mt-0.5 size-4 shrink-0 text-blue-400" />

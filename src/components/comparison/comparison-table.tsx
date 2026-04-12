@@ -73,7 +73,7 @@ export function ComparisonTable({
   const features = [
     {
       name: 'Real-time Collaboration',
-      schemavis: true, // Planned
+      schemavis: 'Planned',
       competitor: competitor.collaboration,
       tooltip: 'Work together in real-time on diagrams',
     },

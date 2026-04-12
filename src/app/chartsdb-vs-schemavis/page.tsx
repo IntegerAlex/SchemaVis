@@ -15,24 +15,25 @@ import { HonestAssessment } from '@/components/comparison/honest-assessment';
 import { WhenToChoose } from '@/components/comparison/when-to-choose';
 import { RoadmapSection } from '@/components/comparison/roadmap-section';
 import { CompetitorLogo } from '@/components/comparison/competitor-logo';
+import { ComparisonDisclaimer } from '@/components/comparison/comparison-disclaimer';
 
 const competitor = getCompetitorById('chartsdb')!;
 
 export const metadata: Metadata = {
-  title: 'chartsdb vs SchemaVis: Honest Comparison for Database Visualization',
+  title: 'ChartDB vs SchemaVis: Honest Comparison for Database Visualization',
   description:
-    'Compare chartsdb and SchemaVis (alpha) - both open source database visualization tools with excellent visuals. chartsdb is PostgreSQL-focused, while SchemaVis supports multiple databases.',
+    'Compare ChartDB and SchemaVis (alpha) - both open source database visualization tools with excellent visuals. ChartDB is PostgreSQL-focused, while SchemaVis supports multiple databases.',
   openGraph: {
-    title: 'chartsdb vs SchemaVis: Honest Comparison',
+    title: 'ChartDB vs SchemaVis: Honest Comparison',
     description:
-      'Compare chartsdb and SchemaVis - both open source with excellent visuals.',
+      'Compare ChartDB and SchemaVis - both open source with excellent visuals.',
     type: 'website',
     url: 'https://schemavis.gossorg.in/chartsdb-vs-schemavis',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'chartsdb vs SchemaVis: Honest Comparison',
-    description: 'Compare chartsdb and SchemaVis - both open source with excellent visuals.',
+    title: 'ChartDB vs SchemaVis: Honest Comparison',
+    description: 'Compare ChartDB and SchemaVis - both open source with excellent visuals.',
   },
 };
 
@@ -64,7 +65,7 @@ export default function ChartsDBComparisonPage() {
               />
               <div>
                 <h1 className="text-4xl font-bold">
-                  chartsdb vs SchemaVis: Honest Comparison
+                  ChartDB vs SchemaVis: Honest Comparison
                 </h1>
                 <p className="text-slate-400 mt-2">
                   Open Source Database Visualization Tools
@@ -72,12 +73,12 @@ export default function ChartsDBComparisonPage() {
               </div>
             </div>
             <p className="text-lg text-slate-300">
-              We acknowledge chartsdb's superior visualization quality. Both
-              chartsdb and SchemaVis are open source tools with excellent visual
-              output. chartsdb is PostgreSQL-focused, while SchemaVis supports
-              multiple databases and is building toward real-time
-              collaboration. This comparison focuses exclusively on
-              visualization capabilities.
+              We acknowledge ChartDB's superior visualization quality. Both
+              ChartDB and SchemaVis are open source tools with excellent visual
+              output. ChartDB is PostgreSQL-focused, while SchemaVis supports
+              multiple databases and is building toward planned collaboration
+              features. This comparison focuses exclusively on visualization
+              capabilities.
             </p>
           </header>
 
@@ -100,7 +101,7 @@ export default function ChartsDBComparisonPage() {
             <div className="grid gap-6 md:grid-cols-2">
               <div className="rounded-lg border border-white/10 bg-white/5 p-6">
                 <h3 className="mb-3 text-lg font-semibold text-white">
-                  chartsdb
+                  ChartDB
                 </h3>
                 <ul className="ml-4 list-disc space-y-2 text-slate-300">
                   <li>Excellent visual quality</li>
@@ -132,12 +133,13 @@ export default function ChartsDBComparisonPage() {
               Honest Acknowledgment
             </h3>
             <p className="text-sm text-amber-200">
-              chartsdb has excellent visualization quality that we respect and
+              ChartDB has excellent visualization quality that we respect and
               learn from. SchemaVis is building toward similar visual excellence
-              while adding collaboration features and multi-database support.
-              If you need production-ready visuals today, chartsdb is an excellent
-              choice. If you want to help shape the future of collaborative
-              visualization, we'd love to have you as an early SchemaVis user.
+              while adding planned collaboration features and multi-database
+              support. If you need production-ready visuals today, ChartDB is
+              an excellent choice. If you want to help shape the future of
+              collaborative visualization, we'd love to have you as an early
+              SchemaVis user.
             </p>
           </section>
 
@@ -163,7 +165,7 @@ export default function ChartsDBComparisonPage() {
                 </a>
               </Button>
               <Button asChild size="lg" className="w-full">
-                <Link href="/app">Try SchemaVis Free Forever</Link>
+                <Link href="/app">Try SchemaVis Free</Link>
               </Button>
             </div>
           </section>
@@ -180,6 +182,8 @@ export default function ChartsDBComparisonPage() {
               <Link href="/contact">Share Feedback</Link>
             </Button>
           </section>
+
+          <ComparisonDisclaimer competitorName="ChartDB" />
         </div>
       </div>
     </div>
