@@ -3,10 +3,11 @@
 import * as React from 'react';
 import { VisualizerLayout } from '@/components/visualizer-layout';
 import { ParseSQLProvider } from '@/context/parse-sql-context';
-import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignIn } from '@clerk/nextjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UsernameSetupModal } from '@/components/username-setup-modal';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 interface UserInfo {
   id: string;
@@ -53,20 +54,14 @@ export default function AppPage() {
   return (
     <>
       <SignedOut>
-        <div className="flex min-h-screen w-full items-center justify-center bg-slate-950 px-6">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-xl">
-            <h1 className="text-2xl font-semibold text-white">Sign in required</h1>
-            <p className="mt-2 text-sm text-slate-200">
-              Please sign in to access the SchemaVis visualizer.
-            </p>
-            <div className="mt-6">
-              <SignInButton mode="modal">
-                <button className="w-full rounded-lg bg-blue-600 px-4 py-3 text-white hover:bg-blue-700 transition">
-                  Sign in with Clerk
-                </button>
-              </SignInButton>
-            </div>
+        <div className="flex flex-col min-h-screen w-full items-center justify-center bg-[#0A0A0A] px-6 py-12">
+          <div className="mb-6 w-full max-w-[400px]">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors">
+              <ArrowLeft className="size-4" />
+              Cancel
+            </Link>
           </div>
+          <SignIn routing="hash" fallbackRedirectUrl="/app" />
         </div>
       </SignedOut>
       <SignedIn>
