@@ -59,6 +59,7 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, onFileLoad, isLoadin
     setFileName('');
     setSaveError(null);
     setSaveSuccess(false);
+    onSqlChange('', databaseType);
   };
 
   const handleFileUpload = React.useCallback(
