@@ -188,7 +188,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const RENAME_BLUR_DEBOUNCE_MS = 150;
 
   const handleRenameBlur = React.useCallback(() => {
-    // Cancel any existing pending blur timeout
+    // Cancel any pending blur timeout
     if (blurTimeoutRef.current) {
       clearTimeout(blurTimeoutRef.current);
     }
