@@ -11,19 +11,19 @@
     import { useParseSQLContext } from '@/context/parse-sql-context';
     import { cn } from '@/lib/utils';
     import Image from 'next/image';
-    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Github, Share2, MessageCircle, Plus } from 'lucide-react';
+    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Plus } from 'lucide-react';
     import { ReactFlowProvider } from '@xyflow/react';
     import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
 import { SqlFilesSidebar } from './sql-files-sidebar';
 // import { Sidebar } from './ui/sidebar'; // Deprecated: Replaced by header "New Diagram" button
 import { SqlInputSidebar } from './sql-input-sidebar';
 import { useQueryClient } from '@tanstack/react-query';
-import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
-import { ShareDialog } from './share-dialog';
-// Comments feature disabled
+// Sharing and collaboration features temporarily disabled
+// import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
+// import { ShareDialog } from './share-dialog';
 // import { CommentsPanel } from './comments/comments-panel';
-import { RightSidebar } from './right-sidebar';
-import { useOptionalCollaboration } from '@/context/collaboration-context';
+// import { RightSidebar } from './right-sidebar';
+// import { useOptionalCollaboration } from '@/context/collaboration-context';
 // import type { CommentData } from '@/lib/collaboration/types';
 import { detectDatabaseType } from '@/lib/parsers';
 import { DatabaseType } from '@/lib/domain/database-type';
@@ -59,22 +59,24 @@ import { useToast } from './toast';
     const [detectedDatabaseType, setDetectedDatabaseType] = React.useState<string | null>(null);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isScrolled, setIsScrolled] = React.useState(false);
-    const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
-    const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
-    const [navigateToCommentId, setNavigateToCommentId] = React.useState<number | null>(null);
+    // Sharing and collaboration features temporarily disabled
+    // const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
+    // const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
+    // const [navigateToCommentId, setNavigateToCommentId] = React.useState<number | null>(null);
     const [sidebarMode, setSidebarMode] = React.useState<'main' | 'sql-input'>('main');
     const queryClient = useQueryClient();
-    const collaboration = useOptionalCollaboration();
+    // Sharing and collaboration features temporarily disabled
+    // const collaboration = useOptionalCollaboration();
     const { showToast } = useToast();
 
-    const handleShareClick = React.useCallback(() => {
-      setIsShareDialogOpen(true);
-    }, []);
+    // Sharing and collaboration features temporarily disabled
+    // const handleShareClick = React.useCallback(() => {
+    //   setIsShareDialogOpen(true);
+    // }, []);
 
-    const handleCommentsClick = React.useCallback(() => {
-      // Comments feature disabled
-      // Intentionally left empty but stable for memoized sidebar
-    }, []);
+    // const handleCommentsClick = React.useCallback(() => {
+    //   // Intentionally left empty but stable for memoized sidebar
+    // }, []);
 
     // Shared function to handle SQL content loading (from file upload or sidebar)
     const handleSQLContent = React.useCallback((sqlContent: string, fileName: string) => {
@@ -123,49 +125,49 @@ import { useToast } from './toast';
         }
     }, [parseMutation.isPending]);
     
-    // Placeholder diagram ID - in production, this would come from route params or saved state
-    const currentDiagramId = React.useMemo(() => {
-      // For now, use a static ID or generate one when diagram is loaded
-      return diagram?.id ?? 'temp-diagram';
-    }, [diagram?.id]);
+    // Sharing and collaboration features temporarily disabled
+    // // Placeholder diagram ID - in production, this would come from route params or saved state
+    // const currentDiagramId = React.useMemo(() => {
+    //   // For now, use a static ID or generate one when diagram is loaded
+    //   return diagram?.id ?? 'temp-diagram';
+    // }, [diagram?.id]);
 
-    // Initialize collaboration context with diagram ID
-    // Use ref to track previous diagram ID to prevent unnecessary updates
-    const prevDiagramIdRef = React.useRef<string | null>(null);
-    React.useEffect(() => {
-      if (!collaboration?.setDiagramId) return;
-      
-      const diagramId = diagram?.id ?? null;
-      
-      // Clear collaboration context when diagram ID changes (before setting new one)
-      if (prevDiagramIdRef.current !== null && prevDiagramIdRef.current !== diagramId) {
-        // Clear the old diagram's collaboration state
-        collaboration.setDiagramId(null);
-        // Invalidate queries for the old diagram
-        queryClient.removeQueries({ queryKey: ['diagram-comments', prevDiagramIdRef.current] });
-      }
-      
-      // Only update if diagram ID actually changed
-      if (prevDiagramIdRef.current !== diagramId) {
-        prevDiagramIdRef.current = diagramId;
-        // Set new diagram ID (this will trigger comments refetch)
-        if (diagramId) {
-          collaboration.setDiagramId(diagramId);
-        }
-      }
-      
-      return () => {
-        // Only clear on unmount, not on every change
-        if (prevDiagramIdRef.current !== null) {
-          const oldId = prevDiagramIdRef.current;
-          prevDiagramIdRef.current = null;
-          collaboration.setDiagramId(null);
-          queryClient.removeQueries({ queryKey: ['diagram-comments', oldId] });
-        }
-      };
-    }, [diagram?.id, collaboration?.setDiagramId, queryClient]);
+    // // Initialize collaboration context with diagram ID
+    // // Use ref to track previous diagram ID to prevent unnecessary updates
+    // const prevDiagramIdRef = React.useRef<string | null>(null);
+    // React.useEffect(() => {
+    //   if (!collaboration?.setDiagramId) return;
+    //   
+    //   const diagramId = diagram?.id ?? null;
+    //   
+    //   // Clear collaboration context when diagram ID changes (before setting new one)
+    //   if (prevDiagramIdRef.current !== null && prevDiagramIdRef.current !== diagramId) {
+    //     // Clear the old diagram's collaboration state
+    //     collaboration.setDiagramId(null);
+    //     // Invalidate queries for the old diagram
+    //     queryClient.removeQueries({ queryKey: ['diagram-comments', prevDiagramIdRef.current] });
+    //   }
+    //   
+    //   // Only update if diagram ID actually changed
+    //   if (prevDiagramIdRef.current !== diagramId) {
+    //     prevDiagramIdRef.current = diagramId;
+    //     // Set new diagram ID (this will trigger comments refetch)
+    //     if (diagramId) {
+    //       collaboration.setDiagramId(diagramId);
+    //     }
+    //   }
+    //   
+    //   return () => {
+    //     // Only clear on unmount, not on every change
+    //     if (prevDiagramIdRef.current !== null) {
+    //       const oldId = prevDiagramIdRef.current;
+    //       prevDiagramIdRef.current = null;
+    //       collaboration.setDiagramId(null);
+    //       queryClient.removeQueries({ queryKey: ['diagram-comments', oldId] });
+    //     }
+    //   };
+    // }, [diagram?.id, collaboration?.setDiagramId, queryClient]);
 
-    // Comments feature disabled
     // // Navigate to comment location on canvas
     // const handleNavigateToComment = React.useCallback((comment: CommentData) => {
     //   // Close panel
@@ -495,8 +497,9 @@ import { useToast } from './toast';
             </div>
           </div>
 
-          {/* Right Sidebar - Comments feature disabled */}
-          <SignedIn>
+          {/* Sharing and collaboration features temporarily disabled */}
+          {/* Right Sidebar */}
+          {/* <SignedIn>
             {diagram && (
               <RightSidebar
                 onCommentsClick={handleCommentsClick}
@@ -505,11 +508,12 @@ import { useToast } from './toast';
                 showShare={!!diagram}
               />
             )}
-          </SignedIn>
+          </SignedIn> */}
         </div>
 
+        {/* Sharing and collaboration features temporarily disabled */}
         {/* Share Dialog */}
-        <ShareDialog
+        {/* <ShareDialog
           isOpen={isShareDialogOpen}
           onClose={() => setIsShareDialogOpen(false)}
           diagramId={currentDiagramId}
@@ -523,9 +527,8 @@ import { useToast } from './toast';
             notes: diagram.notes,
           } : undefined}
           databaseType={diagram?.databaseType}
-        />
+        /> */}
 
-        {/* Comments feature disabled */}
         {/* Comments Panel */}
         {/* <CommentsPanel
           isOpen={isCommentsPanelOpen}

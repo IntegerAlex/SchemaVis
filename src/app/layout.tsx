@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { ClerkProvider } from "@clerk/nextjs";
-import { CollaborationProvider } from "@/context/collaboration-context";
+// Collaboration features temporarily disabled
+// import { CollaborationProvider } from "@/context/collaboration-context";
 import { DiagramEventsProvider } from "@/context/diagram-events-context";
 import { ToastProvider } from "@/components/toast";
 
@@ -46,7 +47,9 @@ export default function RootLayout({
           <QueryProvider>
             <ToastProvider>
               <DiagramEventsProvider>
-                <CollaborationProvider>{children}</CollaborationProvider>
+                {/* Collaboration features temporarily disabled */}
+                {/* <CollaborationProvider>{children}</CollaborationProvider> */}
+                {children}
               </DiagramEventsProvider>
             </ToastProvider>
           </QueryProvider>
