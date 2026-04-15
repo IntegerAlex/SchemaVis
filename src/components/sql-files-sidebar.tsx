@@ -6,7 +6,7 @@
 'use client';
 
 import * as React from 'react';
-import { FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2, Pencil, Check, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useSqlFiles } from '@/hooks/use-sql-files';
@@ -37,6 +37,10 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const [collapsed, setCollapsed] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = React.useState<{ fileId: number; fileName: string } | null>(null);
+  const [renamingId, setRenamingId] = React.useState<number | null>(null);
+  const [renameValue, setRenameValue] = React.useState('');
+  const [isRenaming, setIsRenaming] = React.useState(false);
+  const renameInputRef = React.useRef<HTMLInputElement>(null);
   const { data, isLoading, error, refetch } = useSqlFiles();
   const { parseMutation } = useParseSQLContext();
   const queryClient = useQueryClient();
@@ -104,6 +108,64 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const handleDeleteCancel = React.useCallback(() => {
     setConfirmDelete(null);
   }, []);
+
+  const handleRenameStart = React.useCallback(
+    (fileId: number, currentName: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setRenamingId(fileId);
+      setRenameValue(currentName);
+      // Focus the input after render
+      setTimeout(() => renameInputRef.current?.focus(), 0);
+    },
+    []
+  );
+
+  const handleRenameConfirm = React.useCallback(
+    async () => {
+      if (!renamingId || !renameValue.trim()) {
+        setRenamingId(null);
+        return;
+      }
+
+      setIsRenaming(true);
+      try {
+        const response = await fetch(`/api/sql-files/${renamingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: renameValue.trim() }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to rename file');
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ['sql-files'] });
+      } catch (err) {
+        console.error('Error renaming SQL file:', err);
+      } finally {
+        setIsRenaming(false);
+        setRenamingId(null);
+      }
+    },
+    [renamingId, renameValue, queryClient]
+  );
+
+  const handleRenameCancel = React.useCallback(() => {
+    setRenamingId(null);
+    setRenameValue('');
+  }, []);
+
+  const handleRenameKeyDown = React.useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleRenameConfirm();
+      } else if (e.key === 'Escape') {
+        handleRenameCancel();
+      }
+    },
+    [handleRenameConfirm, handleRenameCancel]
+  );
 
   const files = data?.files ?? [];
 
@@ -249,66 +311,118 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
                   )}
                   role="listitem"
                 >
-                  <button
-                    onClick={() => handleFileClick(file.id)}
-                    disabled={parseMutation.isPending || deletingId === file.id}
-                    className={cn(
-                      'flex items-center flex-1 min-w-0',
-                      'active:scale-[0.98]',
-                      parseMutation.isPending && 'opacity-50 cursor-not-allowed',
-                      deletingId === file.id && 'opacity-50 cursor-not-allowed',
-                      collapsed 
-                        ? 'justify-center' 
-                        : 'items-start gap-2 text-left'
-                    )}
-                    title={collapsed ? file.title || `File ${file.id}` : file.title || `Untitled ${file.id}`}
-                    aria-label={collapsed 
-                      ? `Load SQL file: ${file.title || `Untitled ${file.id}`}`
-                      : `Load SQL file: ${file.title || `Untitled ${file.id}`}, created ${formatDate(file.createdAt)}`
-                    }
-                    aria-describedby={collapsed ? undefined : `file-${file.id}-date`}
-                    style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
-                  >
-                    <FileText 
-                      className={cn(
-                        "shrink-0 text-blue-400 transition-all duration-500 ease-out",
-                        collapsed ? "size-5" : "size-4 mt-0.5"
-                      )} 
-                      aria-hidden="true"
-                      style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
-                    />
-                    {!collapsed && (
-                      <div 
-                        className="flex-1 min-w-0 overflow-hidden transition-opacity duration-500 ease-out" 
-                        style={{ 
-                          opacity: collapsed ? 0 : 1,
-                          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-                        }}
+                  {/* Inline rename mode */}
+                  {renamingId === file.id && !collapsed ? (
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <FileText className="shrink-0 text-blue-400 size-4 mt-0.5" aria-hidden="true" />
+                      <input
+                        ref={renameInputRef}
+                        type="text"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={handleRenameKeyDown}
+                        onBlur={handleRenameConfirm}
+                        disabled={isRenaming}
+                        className="flex-1 min-w-0 px-1.5 py-0.5 text-sm font-medium text-white bg-white/10 border border-blue-500/50 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        aria-label="Rename file"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleRenameConfirm}
+                        disabled={isRenaming}
+                        className="h-6 w-6 text-green-400 hover:text-green-300 hover:bg-green-900/20 rounded shrink-0"
+                        aria-label="Confirm rename"
                       >
-                        <p className="text-sm font-medium text-white truncate">
-                          {file.title || `Untitled ${file.id}`}
-                        </p>
-                        <p className="text-xs text-zinc-300 mt-0.5 truncate" id={`file-${file.id}-date`}>
-                          {formatDate(file.createdAt)}
-                        </p>
-                      </div>
-                    )}
-                  </button>
-                  {!collapsed && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => handleDeleteClick(file.id, file.title || `Untitled ${file.id}`, e)}
-                      disabled={deletingId === file.id}
-                      className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg shrink-0"
-                      aria-label={`Delete SQL file: ${file.title || `Untitled ${file.id}`}`}
-                    >
-                      {deletingId === file.id ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="size-3.5" />
+                        {isRenaming ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleRenameCancel}
+                        disabled={isRenaming}
+                        className="h-6 w-6 text-zinc-400 hover:text-white hover:bg-white/10 rounded shrink-0"
+                        aria-label="Cancel rename"
+                      >
+                        <X className="size-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleFileClick(file.id)}
+                        disabled={parseMutation.isPending || deletingId === file.id}
+                        className={cn(
+                          'flex items-center flex-1 min-w-0',
+                          'active:scale-[0.98]',
+                          parseMutation.isPending && 'opacity-50 cursor-not-allowed',
+                          deletingId === file.id && 'opacity-50 cursor-not-allowed',
+                          collapsed 
+                            ? 'justify-center' 
+                            : 'items-start gap-2 text-left'
+                        )}
+                        title={collapsed ? file.title || `File ${file.id}` : file.title || `Untitled ${file.id}`}
+                        aria-label={collapsed 
+                          ? `Load SQL file: ${file.title || `Untitled ${file.id}`}`
+                          : `Load SQL file: ${file.title || `Untitled ${file.id}`}, created ${formatDate(file.createdAt)}`
+                        }
+                        aria-describedby={collapsed ? undefined : `file-${file.id}-date`}
+                        style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
+                      >
+                        <FileText 
+                          className={cn(
+                            "shrink-0 text-blue-400 transition-all duration-500 ease-out",
+                            collapsed ? "size-5" : "size-4 mt-0.5"
+                          )} 
+                          aria-hidden="true"
+                          style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
+                        />
+                        {!collapsed && (
+                          <div 
+                            className="flex-1 min-w-0 overflow-hidden transition-opacity duration-500 ease-out" 
+                            style={{ 
+                              opacity: collapsed ? 0 : 1,
+                              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
+                          >
+                            <p className="text-sm font-medium text-white truncate">
+                              {file.title || `Untitled ${file.id}`}
+                            </p>
+                            <p className="text-xs text-zinc-300 mt-0.5 truncate" id={`file-${file.id}-date`}>
+                              {formatDate(file.createdAt)}
+                            </p>
+                          </div>
+                        )}
+                      </button>
+                      {!collapsed && (
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => handleRenameStart(file.id, file.title || `Untitled ${file.id}`, e)}
+                            disabled={deletingId === file.id}
+                            className="h-7 w-7 text-zinc-400 hover:text-blue-400 hover:bg-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg"
+                            aria-label={`Rename SQL file: ${file.title || `Untitled ${file.id}`}`}
+                          >
+                            <Pencil className="size-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => handleDeleteClick(file.id, file.title || `Untitled ${file.id}`, e)}
+                            disabled={deletingId === file.id}
+                            className="h-7 w-7 text-zinc-400 hover:text-red-400 hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg"
+                            aria-label={`Delete SQL file: ${file.title || `Untitled ${file.id}`}`}
+                          >
+                            {deletingId === file.id ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-3.5" />
+                            )}
+                          </Button>
+                        </div>
                       )}
-                    </Button>
+                    </>
                   )}
                 </div>
               ))}

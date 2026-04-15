@@ -141,3 +141,32 @@ body {
     transform: translateY(0);
   }
 }
+
+/* ───── Performance optimizations ───── */
+
+/* Promote the ReactFlow canvas to its own compositing layer */
+.react-flow {
+  contain: layout style;
+}
+
+/* Isolate each node to avoid layout thrashing during drag/pan */
+.react-flow__node {
+  contain: layout style;
+  will-change: transform;
+}
+
+/* MiniMap and Controls don't affect main layout */
+.react-flow__minimap,
+.react-flow__controls {
+  contain: strict;
+}
+
+/* Reduce paint area for sidebar transitions */
+.sql-files-sidebar-container {
+  contain: layout style;
+}
+
+/* Use GPU-accelerated transforms for smoother scrolling in file lists */
+.react-flow__edges {
+  contain: layout style;
+}
