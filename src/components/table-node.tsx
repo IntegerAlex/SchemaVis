@@ -123,7 +123,7 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
         className="px-4 py-2 font-semibold text-white rounded-t-lg"
         style={{ backgroundColor: table.color }}
       >
-        {table.schema && <div className="text-sm opacity-80">{table.schema}.</div>}
+        <div className="text-sm">{table.schema && `${table.schema}.`}</div>
         <div className="text-base">{table.name}</div>
       </div>
 

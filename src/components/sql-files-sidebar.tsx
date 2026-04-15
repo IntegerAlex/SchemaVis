@@ -155,6 +155,18 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
     setRenameValue('');
   }, []);
 
+  const handleRenameBlur = React.useCallback(() => {
+    // Small delay to allow button clicks to register before blur cancels the rename
+    setTimeout(() => {
+      setRenamingId((current) => {
+        if (current !== null && !isRenaming) {
+          handleRenameConfirm();
+        }
+        return current;
+      });
+    }, 150);
+  }, [isRenaming, handleRenameConfirm]);
+
   const handleRenameKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter') {
@@ -321,7 +333,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
                         value={renameValue}
                         onChange={(e) => setRenameValue(e.target.value)}
                         onKeyDown={handleRenameKeyDown}
-                        onBlur={handleRenameConfirm}
+                        onBlur={handleRenameBlur}
                         disabled={isRenaming}
                         className="flex-1 min-w-0 px-1.5 py-0.5 text-sm font-medium text-white bg-white/10 border border-blue-500/50 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         aria-label="Rename file"
