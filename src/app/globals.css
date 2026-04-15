@@ -161,7 +161,7 @@ body {
   contain: strict;
 }
 
-/* Use GPU-accelerated transforms for smoother scrolling in file lists */
+/* Isolate React Flow edges to limit layout and style recalculation */
 .react-flow__edges {
   contain: layout style;
 }

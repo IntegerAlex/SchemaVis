@@ -6,6 +6,7 @@
  */
 
 import { memo, useMemo, useCallback } from 'react';
+import type { CSSProperties } from 'react';
 import { Handle, type NodeProps, Position, type Node } from '@xyflow/react';
 import type { DBTable } from '@/lib/domain/db-table';
 import type { DBField } from '@/lib/domain/db-field';
@@ -27,7 +28,7 @@ const FieldRow = memo(function FieldRow({
   animationStyle,
 }: {
   field: DBField;
-  animationStyle?: React.CSSProperties;
+  animationStyle?: CSSProperties;
 }) {
   return (
     <div

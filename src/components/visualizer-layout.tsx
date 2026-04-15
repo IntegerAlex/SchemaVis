@@ -17,7 +17,6 @@
 import { SqlFilesSidebar } from './sql-files-sidebar';
 // import { Sidebar } from './ui/sidebar'; // Deprecated: Replaced by header "New Diagram" button
 import { SqlInputSidebar } from './sql-input-sidebar';
-import { useQueryClient } from '@tanstack/react-query';
 // Sharing and collaboration features temporarily disabled
 // import { PresenceAvatars, ConnectionStatus } from './presence-avatars';
 // import { ShareDialog } from './share-dialog';
@@ -190,6 +189,11 @@ import { useToast } from './toast';
     }, []);
 
     const handleNewDiagramClick = React.useCallback(() => {
+        // Cancel any pending debounced SQL parse to avoid stale re-parses after reset
+        if (sqlChangeDebounceRef.current) {
+            clearTimeout(sqlChangeDebounceRef.current);
+            sqlChangeDebounceRef.current = null;
+        }
         setSidebarMode('sql-input');
         setSqlInputKey(prev => prev + 1);
         setIsMenuOpen(false);
@@ -220,34 +224,33 @@ import { useToast } from './toast';
                 isScrolled && 'shadow-lg'
             )}>
             <div className="px-6 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 max-w-7xl w-full mx-auto">
-            <div className="flex h-16 items-center justify-between gap-4 relative">
-                {/* Logo */}
+            <div className="flex h-16 items-center justify-between gap-4">
+                {/* Logo + active-file breadcrumb */}
                 <div className="flex items-center gap-3 min-w-0">
                     <Image
                     src="/logo.png"
                     alt="SchemaVis logo"
-                    width={80}
-                    height={80}
-                    className="h-20 w-20 object-contain scale-150"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 object-contain shrink-0"
                     priority
                     />
+                    {selectedFileName && !parseMutation.isPending && (
+                        <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-400 min-w-0">
+                            <span className="text-slate-600">/</span>
+                            <FileText className="size-3.5 text-blue-400 shrink-0" />
+                            <span className="text-slate-300 truncate max-w-[200px]">{selectedFileName}</span>
+                            {(detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)) && (
+                                <>
+                                    <span className="text-slate-600">·</span>
+                                    <span className="text-xs text-slate-400 font-medium shrink-0">
+                                        {detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
-
-                {/* Centered Active-File Badge */}
-                {selectedFileName && !parseMutation.isPending && (
-                    <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 px-4 py-1.5 bg-slate-800/40 rounded-full border border-white/10 shadow-sm text-sm min-w-0">
-                        <FileText className="size-4 text-blue-400 shrink-0" />
-                        <span className="text-slate-200 truncate max-w-[250px] font-medium">{selectedFileName}</span>
-                        {(detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)) && (
-                            <>
-                                <span className="text-slate-600">·</span>
-                                <span className="text-xs text-slate-400 font-medium shrink-0">
-                                    {detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)}
-                                </span>
-                            </>
-                        )}
-                    </div>
-                )}
 
                 {/* Desktop actions */}
                 <div className="hidden md:flex items-center space-x-3">
