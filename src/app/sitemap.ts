@@ -24,7 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/sqldbm-vs-schemavis',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
-    lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: route === '' ? 1 : 0.8,
   }));
