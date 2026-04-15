@@ -191,9 +191,9 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, onFileLoad, isLoadin
                 <button
                   type="button"
                   onClick={() => fileUploadRef.current?.click()}
-                  className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-md transition-all border border-blue-500/20 hover:border-blue-500/40"
                 >
-                  <Upload className="size-3" />
+                  <Upload className="size-4" />
                   Upload .sql
                 </button>
                 <input
