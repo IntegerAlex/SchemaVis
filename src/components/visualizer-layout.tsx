@@ -11,7 +11,7 @@
     import { useParseSQLContext } from '@/context/parse-sql-context';
     import { cn } from '@/lib/utils';
     import Image from 'next/image';
-    import { Upload, FileText, Loader2, Menu, X, ExternalLink, Plus } from 'lucide-react';
+    import { FileText, Loader2, Menu, X, Plus } from 'lucide-react';
     import { ReactFlowProvider } from '@xyflow/react';
     import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
 import { SqlFilesSidebar } from './sql-files-sidebar';
@@ -54,7 +54,6 @@ import { useToast } from './toast';
     export function VisualizerLayout({ className }: VisualizerLayoutProps) {
     const { parseMutation } = useParseSQLContext();
     const diagram = parseMutation.data?.diagram ?? null;
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [selectedFileName, setSelectedFileName] = React.useState<string | null>(null);
     const [detectedDatabaseType, setDetectedDatabaseType] = React.useState<string | null>(null);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -64,11 +63,9 @@ import { useToast } from './toast';
     // const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
     // const [navigateToCommentId, setNavigateToCommentId] = React.useState<number | null>(null);
     const [sidebarMode, setSidebarMode] = React.useState<'main' | 'sql-input'>('main');
-    const queryClient = useQueryClient();
     // Sharing and collaboration features temporarily disabled
     // const collaboration = useOptionalCollaboration();
     const { showToast } = useToast();
-
     // Sharing and collaboration features temporarily disabled
     // const handleShareClick = React.useCallback(() => {
     //   setIsShareDialogOpen(true);
@@ -178,12 +175,6 @@ import { useToast } from './toast';
     //   setTimeout(() => setNavigateToCommentId(null), 100);
     // }, []);
 
-    const navLinks = React.useMemo(
-        () => [
-        { href: '', text: '' },
-        ],
-        []
-    );
 
     React.useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -197,51 +188,6 @@ import { useToast } from './toast';
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    const handleFileSelect = React.useCallback(
-        async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        
-        try {
-            const text = await file.text();
-            
-            // Save to database
-            try {
-                await fetch('/api/sql-files', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title: file.name,
-                        content: text,
-                    }),
-                });
-                // Invalidate query cache to refresh sidebar
-                queryClient.invalidateQueries({ queryKey: ['sql-files'] });
-            } catch (dbError) {
-                console.error('Error saving file to database:', dbError);
-                // Continue even if saving fails
-            }
-            
-            // Use shared handler
-            handleSQLContent(text, file.name);
-        } catch (error) {
-            console.error('Error reading file:', error);
-            setSelectedFileName(null);
-            setDetectedDatabaseType(null);
-        } finally {
-            // Reset file input so the same file can be re-uploaded
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
-        },
-        [handleSQLContent, queryClient]
-    );
-
-    const handleUploadClick = React.useCallback(() => {
-        fileInputRef.current?.click();
     }, []);
 
     return (
@@ -258,179 +204,94 @@ import { useToast } from './toast';
                 isScrolled && 'shadow-lg'
             )}>
             <div className="px-6 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 max-w-7xl w-full mx-auto">
-            <div className="flex h-16 sm:h-18 lg:h-20 items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+            <div className="flex h-16 items-center justify-between gap-4">
+                {/* Logo + active-file breadcrumb */}
+                <div className="flex items-center gap-3 min-w-0">
                     <Image
                     src="/logo.png"
                     alt="SchemaVis logo"
-                    width={80}
-                    height={80}
-                    className="h-20 w-20 object-contain scale-150"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 object-contain shrink-0"
                     priority
                     />
+                    {selectedFileName && !parseMutation.isPending && (
+                        <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-400 min-w-0">
+                            <span className="text-slate-600">/</span>
+                            <FileText className="size-3.5 text-blue-400 shrink-0" />
+                            <span className="text-slate-300 truncate max-w-[200px]">{selectedFileName}</span>
+                            {(detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)) && (
+                                <>
+                                    <span className="text-slate-600">·</span>
+                                    <span className="text-xs text-slate-400 font-medium shrink-0">
+                                        {detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
 
-                <div className="hidden md:flex items-center gap-2 text-xs text-slate-300">
+                {/* Desktop actions */}
+                <div className="hidden md:flex items-center space-x-3">
                 <SignedOut>
                     <SignInButton mode="modal">
-                    <button className="ml-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 hover:bg-white/10 transition text-slate-100">
-                        <span>Sign in</span>
+                    <button className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 hover:bg-white/10 transition text-slate-100 text-sm">
+                        Sign in
                     </button>
                     </SignInButton>
                 </SignedOut>
-                {/* <a
-                    href="https://github.com/IntegerAlex/SchemaVis"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="ml-2 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 hover:bg-white/10 transition text-slate-100"
-                >
-                    <Github className="h-4 w-4" />
-                    <span>GitHub</span>
-                </a> */}
-                </div>
-
-                <div className="hidden md:flex items-center space-x-3">
-                {/* Collaboration features disabled */}
-
-                {/* Comment and share buttons moved to right sidebar */}
 
                 <Button
                     onClick={() => setSidebarMode('sql-input')}
-                    className="px-5 py-2 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-lg transform hover:scale-105 border border-white/10"
+                    className="px-5 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all shadow-sm hover:shadow-lg border border-white/10"
                 >
                     <Plus className="size-4 mr-2" />
                     New Diagram
                 </Button>
 
-                <Button
-                    onClick={handleUploadClick}
-                    disabled={parseMutation.isPending}
-                    className="px-5 py-2 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-lg transform hover:scale-105 border border-white/10"
-                >
-                    {parseMutation.isPending ? (
-                    <>
-                        <Loader2 className="size-4 mr-2 animate-spin" />
-                        Parsing...
-                    </>
-                    ) : (
-                    <>
-                        <Upload className="size-4 mr-2" />
-                        Upload SQL
-                    </>
-                    )}
-                </Button>
-                {selectedFileName && !parseMutation.isPending && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10 max-w-[300px]">
-                    <FileText className="size-4 text-blue-400 shrink-0" />
-                    <span className="text-sm text-zinc-300 truncate">{selectedFileName}</span>
-                    {(detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)) && (
-                        <>
-                            <span className="text-zinc-600">•</span>
-                            <span className="text-xs text-zinc-400 font-medium shrink-0">
-                                {detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)}
-                            </span>
-                        </>
-                    )}
-                    </div>
-                )}
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".sql"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                />
                 <SignedIn>
                     <UserButton afterSignOutUrl="/app" />
                 </SignedIn>
                 </div>
 
+                {/* Mobile menu toggle */}
                 <button
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                className="md:hidden p-2 text-slate-300 hover:bg-slate-800/50 rounded-md transition-colors"
                 aria-label="Toggle menu"
                 >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
             </div>
 
+            {/* Mobile menu */}
             <div
                 className={cn(
                 'md:hidden overflow-hidden transition-all duration-300 ease-in-out',
-                isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
                 )}
             >
-                <div className="py-4 border-t border-gray-200/70 dark:border-gray-800/70">
-                <div className="flex flex-col space-y-1">
-                    {navLinks.map((link) => (
-                    <a
-                        key={link.text}
-                        href={link.href}
-                        onClick={() => setIsMenuOpen(false)}
-                        className="px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        {link.text}
-                    </a>
-                    ))}
-                    <div className="pt-4 mt-2 border-t border-gray-200/70 dark:border-gray-700/70 flex flex-col space-y-2">
-                    <a
-                        href="#"
-                        className="flex items-center justify-center space-x-2 px-3 py-2.5 text-sm font-medium border border-gray-300/70 dark:border-gray-700/70 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        <span>Resume</span>
-                        <ExternalLink className="h-4 w-4" />
-                    </a>
+                <div className="py-4 border-t border-slate-700/70">
+                <div className="flex flex-col space-y-2">
                     <Button
-                        onClick={() => setSidebarMode('sql-input')}
-                        className="w-full px-3 py-2.5 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors border border-white/10"
+                        onClick={() => { setSidebarMode('sql-input'); setIsMenuOpen(false); }}
+                        className="w-full px-3 py-2.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700 transition-colors border border-white/10"
                     >
                         <Plus className="size-4 mr-2" />
                         New Diagram
                     </Button>
-                    <Button
-                        onClick={handleUploadClick}
-                        disabled={parseMutation.isPending}
-                        className="w-full px-3 py-2.5 text-sm font-medium bg-gray-900 text-white dark:bg-gray-50 dark:text-gray-900 rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors border border-white/10"
-                    >
-                        {parseMutation.isPending ? (
-                        <>
-                            <Loader2 className="size-4 mr-2 animate-spin" />
-                            Parsing...
-                        </>
-                        ) : (
-                        <>
-                            <Upload className="size-4 mr-2" />
-                            Upload SQL
-                        </>
-                        )}
-                    </Button>
-                    {selectedFileName && !parseMutation.isPending && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
-                        <FileText className="size-4 text-blue-400 shrink-0" />
-                        <span className="text-sm text-zinc-300 truncate">{selectedFileName}</span>
-                        {(detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)) && (
-                            <>
-                                <span className="text-zinc-600">•</span>
-                                <span className="text-xs text-zinc-400 font-medium shrink-0">
-                                    {detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)}
-                                </span>
-                            </>
-                        )}
+                    {parseMutation.isPending && (
+                        <div className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300">
+                            <Loader2 className="size-4 animate-spin text-blue-400" />
+                            Parsing…
                         </div>
                     )}
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".sql"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                    />
                     <SignedIn>
                         <div className="flex justify-center pt-2">
                         <UserButton afterSignOutUrl="/app" />
                         </div>
                     </SignedIn>
-                    </div>
                 </div>
                 </div>
             </div>
@@ -451,6 +312,7 @@ import { useToast } from './toast';
               <SqlInputSidebar
                 onBackClick={() => setSidebarMode('main')}
                 onSqlChange={handleSqlInputChange}
+                onFileLoad={handleSQLContent}
                 isLoading={parseMutation.isPending}
                 error={parseMutation.error?.error}
               />
@@ -477,7 +339,7 @@ import { useToast } from './toast';
                     {parseMutation.error.error || 'Failed to parse SQL file'}
                     </p>
                     <Button
-                    onClick={handleUploadClick}
+                    onClick={() => setSidebarMode('sql-input')}
                     variant="outline"
                     className="border-white/20 text-white hover:bg-white/10"
                     >

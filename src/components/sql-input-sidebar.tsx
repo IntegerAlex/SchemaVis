@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react';
-import { ArrowLeft, Loader2, Save, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Check, Upload } from 'lucide-react';
 import { Button } from './ui/button';
 import { DatabaseSelector } from './ui/database-selector';
 import { DatabaseType } from '@/lib/domain/database-type';
@@ -16,11 +16,12 @@ import { useQueryClient } from '@tanstack/react-query';
 interface SqlInputSidebarProps {
   onBackClick: () => void;
   onSqlChange: (sql: string, databaseType: DatabaseType) => void;
+  onFileLoad?: (sql: string, fileName: string) => void;
   isLoading?: boolean;
   error?: string;
 }
 
-export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: SqlInputSidebarProps) {
+export function SqlInputSidebar({ onBackClick, onSqlChange, onFileLoad, isLoading, error }: SqlInputSidebarProps) {
   const [sql, setSql] = React.useState('');
   const [fileName, setFileName] = React.useState('');
   const [databaseType, setDatabaseType] = React.useState<DatabaseType>(DatabaseType.GENERIC);
@@ -28,6 +29,7 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const saveSuccessTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileUploadRef = React.useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   // Clean up the save-success timer on unmount
@@ -59,6 +61,30 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
     setSaveError(null);
     setSaveSuccess(false);
   };
+
+  const handleFileUpload = React.useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        setSql(text);
+        setFileName(file.name);
+        if (onFileLoad) {
+          // Parent handles DB-type detection and parsing
+          onFileLoad(text, file.name);
+        } else {
+          onSqlChange(text, databaseType);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setSaveError(`Unable to read file contents: ${message}`);
+      } finally {
+        if (fileUploadRef.current) fileUploadRef.current.value = '';
+      }
+    },
+    [databaseType, onSqlChange, onFileLoad]
+  );
 
   const SAVE_SUCCESS_DISPLAY_MS = 2000;
 
@@ -159,9 +185,27 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
             />
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-white" htmlFor="sql-input-area">
-                SQL Input
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-white" htmlFor="sql-input-area">
+                  SQL Input
+                </label>
+                <button
+                  type="button"
+                  onClick={() => fileUploadRef.current?.click()}
+                  className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  <Upload className="size-3" />
+                  Upload .sql
+                </button>
+                <input
+                  ref={fileUploadRef}
+                  type="file"
+                  accept=".sql"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  aria-label="Upload SQL file"
+                />
+              </div>
               <textarea
                 id="sql-input-area"
                 value={sql}

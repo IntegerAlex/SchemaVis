@@ -199,9 +199,9 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             <Image
               src="/logo.png"
               alt="SchemaVis logo"
-              width={240}
-              height={240}
-              className="h-24 w-24 object-contain scale-150"
+              width={48}
+              height={48}
+              className="h-12 w-12 object-contain"
               priority
             />
 
