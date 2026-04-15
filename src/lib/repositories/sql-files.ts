@@ -205,7 +205,7 @@ export async function updateSqlFile(
   fileId: number,
   params: { title?: string | null; content?: string }
 ) {
-  const setValues: Record<string, unknown> = { updatedAt: new Date() };
+  const setValues: Partial<typeof sqlFiles.$inferInsert> = { updatedAt: new Date() };
   if (params.title !== undefined) {
     setValues.title = params.title;
   }

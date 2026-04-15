@@ -40,10 +40,26 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const [renamingId, setRenamingId] = React.useState<number | null>(null);
   const [renameValue, setRenameValue] = React.useState('');
   const [isRenaming, setIsRenaming] = React.useState(false);
+  const isRenamingRef = React.useRef(false);
+  const blurTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const renameInputRef = React.useRef<HTMLInputElement>(null);
   const { data, isLoading, error, refetch } = useSqlFiles();
   const { parseMutation } = useParseSQLContext();
   const queryClient = useQueryClient();
+
+  // Keep ref in sync with state
+  React.useEffect(() => {
+    isRenamingRef.current = isRenaming;
+  }, [isRenaming]);
+
+  // Clean up blur timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleFileClick = React.useCallback(
     async (fileId: number) => {
@@ -122,6 +138,15 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
 
   const handleRenameConfirm = React.useCallback(
     async () => {
+      // Cancel any pending blur timeout to prevent duplicate calls
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = null;
+      }
+
+      // Guard against concurrent execution
+      if (isRenamingRef.current) return;
+
       if (!renamingId || !renameValue.trim()) {
         setRenamingId(null);
         return;
@@ -151,6 +176,11 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   );
 
   const handleRenameCancel = React.useCallback(() => {
+    // Cancel any pending blur timeout
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
     setRenamingId(null);
     setRenameValue('');
   }, []);
@@ -158,16 +188,19 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
   const RENAME_BLUR_DEBOUNCE_MS = 150;
 
   const handleRenameBlur = React.useCallback(() => {
-    // Small delay to allow button clicks to register before blur cancels the rename
-    setTimeout(() => {
-      setRenamingId((current) => {
-        if (current !== null && !isRenaming) {
-          handleRenameConfirm();
-        }
-        return current;
-      });
+    // Cancel any existing pending blur timeout
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+    // Small delay to allow button clicks to register before blur confirms the rename
+    blurTimeoutRef.current = setTimeout(() => {
+      blurTimeoutRef.current = null;
+      // Use ref to check latest isRenaming state
+      if (!isRenamingRef.current) {
+        handleRenameConfirm();
+      }
     }, RENAME_BLUR_DEBOUNCE_MS);
-  }, [isRenaming, handleRenameConfirm]);
+  }, [handleRenameConfirm]);
 
   const handleRenameKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {

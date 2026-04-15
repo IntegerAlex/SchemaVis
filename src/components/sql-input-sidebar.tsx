@@ -27,7 +27,17 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
+  const saveSuccessTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryClient = useQueryClient();
+
+  // Clean up the save-success timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (saveSuccessTimerRef.current) {
+        clearTimeout(saveSuccessTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleSqlChange = (value: string) => {
     setSql(value);
@@ -59,6 +69,12 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
     setSaveError(null);
     setSaveSuccess(false);
 
+    // Clear any pending success timer
+    if (saveSuccessTimerRef.current) {
+      clearTimeout(saveSuccessTimerRef.current);
+      saveSuccessTimerRef.current = null;
+    }
+
     try {
       const response = await fetch('/api/sql-files', {
         method: 'POST',
@@ -78,7 +94,10 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
       await queryClient.invalidateQueries({ queryKey: ['sql-files'] });
 
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), SAVE_SUCCESS_DISPLAY_MS);
+      saveSuccessTimerRef.current = setTimeout(() => {
+        setSaveSuccess(false);
+        saveSuccessTimerRef.current = null;
+      }, SAVE_SUCCESS_DISPLAY_MS);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save file');
     } finally {
