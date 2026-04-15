@@ -17,11 +17,11 @@ export interface CreateDiagramResponse {
     isPublic: boolean;
     shareToken: string;
     linkPermission: string;
-    shareExpiresAt: Date | null;
+    shareExpiresAt: string | null;
     version: number;
-    deletedAt: Date | null;
-    createdAt: Date;
-    updatedAt: Date;
+    deletedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
   };
 }
 
