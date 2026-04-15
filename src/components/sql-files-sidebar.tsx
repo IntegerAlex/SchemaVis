@@ -31,9 +31,10 @@ function formatDate(date: Date | string): string {
 interface SqlFilesSidebarProps {
   className?: string;
   onFileLoad?: (sqlContent: string, fileName: string) => void;
+  activeFileName?: string | null;
 }
 
-export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps) {
+export function SqlFilesSidebar({ className, onFileLoad, activeFileName }: SqlFilesSidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = React.useState<{ fileId: number; fileName: string } | null>(null);
@@ -347,18 +348,19 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
 
           {!isLoading && !error && files.length > 0 && (
             <div className={cn("space-y-1 overflow-x-hidden", collapsed ? "px-2" : "px-2")} role="list" aria-label={`List of ${files.length} SQL ${files.length === 1 ? 'file' : 'files'}`}>
-              {files.map((file) => (
-                <div
-                  key={file.id}
-                  className={cn(
-                    'w-full flex items-center group overflow-hidden',
-                    'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20',
-                    'transition-all duration-300 ease-out rounded-lg',
-                    collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2.5 gap-2'
-                  )}
-                  role="listitem"
-                >
-                  {/* Inline rename mode */}
+              {files.map((file) => {
+                const isActive = activeFileName && (activeFileName === file.title || (!file.title && activeFileName === `Untitled ${file.id}`));
+                return (
+                  <div
+                    key={file.id}
+                    className={cn(
+                      'w-full flex items-center group overflow-hidden',
+                      isActive ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20',
+                      'border transition-all duration-300 ease-out rounded-lg',
+                      collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2.5 gap-2'
+                    )}
+                    role="listitem"
+                  >                  {/* Inline rename mode */}
                   {renamingId === file.id && !collapsed ? (
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
                       <FileText className="shrink-0 text-blue-400 size-4 mt-0.5" aria-hidden="true" />
@@ -432,11 +434,18 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
                               transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
                             }}
                           >
-                            <p className="text-sm font-medium text-white truncate">
-                              {file.title || `Untitled ${file.id}`}
-                            </p>
-                            <p className="text-xs text-zinc-300 mt-0.5 truncate" id={`file-${file.id}-date`}>
-                              {formatDate(file.createdAt)}
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-white truncate">
+                                {file.title || `Untitled ${file.id}`}
+                              </p>
+                              {isActive && (
+                                <span 
+                                  className="size-2 rounded-full bg-green-500 shrink-0 shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
+                                  aria-label="Active file" 
+                                />
+                              )}
+                            </div>
+                            <p className="text-xs text-zinc-300 mt-0.5 truncate" id={`file-${file.id}-date`}>                              {formatDate(file.createdAt)}
                             </p>
                           </div>
                         )}
@@ -472,9 +481,9 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
                     </>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
+                );
+                })}
+                </div>          )}
         </div>
       </div>
 

@@ -327,7 +327,7 @@ import { useToast } from './toast';
           {/* SQL Files Sidebar or SQL Input Sidebar */}
           <SignedIn>
             {sidebarMode === 'main' ? (
-              <SqlFilesSidebar onFileLoad={handleSQLContent} />
+              <SqlFilesSidebar onFileLoad={handleSQLContent} activeFileName={selectedFileName} />
             ) : (
               <SqlInputSidebar
                 key={sqlInputKey}
