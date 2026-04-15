@@ -19,8 +19,47 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PostgreSQL Schema Visualizer",
-  description: "Visualize PostgreSQL database schemas from SQL files",
+  title: {
+    template: "%s | SchemaVis",
+    default: "SchemaVis - Free Open Source Database Schema Visualizer",
+  },
+  description: "Visualize, explore, and document your database schemas instantly from SQL files. Fast, free, and open-source schema visualization tool for PostgreSQL, MySQL, SQL Server, and more.",
+  metadataBase: new URL("https://schemavis.gossorg.in"),
+  keywords: ["database visualization", "schema visualizer", "sql diagram", "ERD tool", "PostgreSQL", "MySQL", "database schema design", "open source ERD"],
+  authors: [{ name: "Akshat Kotpalliwar" }],
+  creator: "Akshat Kotpalliwar",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://schemavis.gossorg.in",
+    title: "SchemaVis - Free Open Source Database Schema Visualizer",
+    description: "Visualize, explore, and document your database schemas instantly from SQL files. Fast, free, and open-source.",
+    siteName: "SchemaVis",
+    images: [{
+      url: "/landing.png",
+      width: 1200,
+      height: 630,
+      alt: "SchemaVis - Database Schema Visualizer Interface"
+    }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SchemaVis - Free Open Source Database Schema Visualizer",
+    description: "Visualize, explore, and document your database schemas instantly from SQL files. Fast, free, and open-source.",
+    images: ["/landing.png"],
+    creator: "@IntegerAlex",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   manifest: "/site.webmanifest",
   icons: {
     icon: [

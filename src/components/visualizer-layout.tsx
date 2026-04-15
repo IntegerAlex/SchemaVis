@@ -30,6 +30,7 @@ import { useToast } from './toast';
 
     interface VisualizerLayoutProps {
     className?: string;
+    diagramId?: string | null;
     }
 
     // Helper function to format database type for display
