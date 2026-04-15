@@ -63,6 +63,7 @@ import { useToast } from './toast';
     // const [isCommentsPanelOpen, setIsCommentsPanelOpen] = React.useState(false);
     // const [navigateToCommentId, setNavigateToCommentId] = React.useState<number | null>(null);
     const [sidebarMode, setSidebarMode] = React.useState<'main' | 'sql-input'>('main');
+    const [sqlInputKey, setSqlInputKey] = React.useState(0);
     // Sharing and collaboration features temporarily disabled
     // const collaboration = useOptionalCollaboration();
     const { showToast } = useToast();
@@ -96,6 +97,12 @@ import { useToast } from './toast';
     const sqlChangeDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleSqlInputChange = React.useCallback((sql: string, databaseType: DatabaseType) => {
+        // Update the badge when the user explicitly changes the dialect in the sidebar
+        const displayType = formatDatabaseTypeForDisplay(databaseType);
+        if (displayType) {
+            setDetectedDatabaseType(displayType);
+        }
+
         if (sqlChangeDebounceRef.current) {
             clearTimeout(sqlChangeDebounceRef.current);
         }
@@ -182,6 +189,15 @@ import { useToast } from './toast';
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const handleNewDiagramClick = React.useCallback(() => {
+        setSidebarMode('sql-input');
+        setSqlInputKey(prev => prev + 1);
+        setIsMenuOpen(false);
+        setSelectedFileName('Untitled SQL');
+        setDetectedDatabaseType(null);
+        parseMutation.reset();
+    }, [parseMutation]);
+
     React.useEffect(() => {
         const handleResize = () => {
         if (window.innerWidth >= 768) setIsMenuOpen(false);
@@ -204,33 +220,34 @@ import { useToast } from './toast';
                 isScrolled && 'shadow-lg'
             )}>
             <div className="px-6 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 max-w-7xl w-full mx-auto">
-            <div className="flex h-16 items-center justify-between gap-4">
-                {/* Logo + active-file breadcrumb */}
+            <div className="flex h-16 items-center justify-between gap-4 relative">
+                {/* Logo */}
                 <div className="flex items-center gap-3 min-w-0">
                     <Image
                     src="/logo.png"
                     alt="SchemaVis logo"
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 object-contain shrink-0"
+                    width={80}
+                    height={80}
+                    className="h-20 w-20 object-contain scale-150"
                     priority
                     />
-                    {selectedFileName && !parseMutation.isPending && (
-                        <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-400 min-w-0">
-                            <span className="text-slate-600">/</span>
-                            <FileText className="size-3.5 text-blue-400 shrink-0" />
-                            <span className="text-slate-300 truncate max-w-[200px]">{selectedFileName}</span>
-                            {(detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)) && (
-                                <>
-                                    <span className="text-slate-600">·</span>
-                                    <span className="text-xs text-slate-400 font-medium shrink-0">
-                                        {detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)}
-                                    </span>
-                                </>
-                            )}
-                        </div>
-                    )}
                 </div>
+
+                {/* Centered Active-File Badge */}
+                {selectedFileName && !parseMutation.isPending && (
+                    <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 px-4 py-1.5 bg-slate-800/40 rounded-full border border-white/10 shadow-sm text-sm min-w-0">
+                        <FileText className="size-4 text-blue-400 shrink-0" />
+                        <span className="text-slate-200 truncate max-w-[250px] font-medium">{selectedFileName}</span>
+                        {(detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)) && (
+                            <>
+                                <span className="text-slate-600">·</span>
+                                <span className="text-xs text-slate-400 font-medium shrink-0">
+                                    {detectedDatabaseType || formatDatabaseTypeForDisplay(diagram?.databaseType)}
+                                </span>
+                            </>
+                        )}
+                    </div>
+                )}
 
                 {/* Desktop actions */}
                 <div className="hidden md:flex items-center space-x-3">
@@ -243,7 +260,7 @@ import { useToast } from './toast';
                 </SignedOut>
 
                 <Button
-                    onClick={() => setSidebarMode('sql-input')}
+                    onClick={handleNewDiagramClick}
                     className="px-5 py-2 text-sm font-medium bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all shadow-sm hover:shadow-lg border border-white/10"
                 >
                     <Plus className="size-4 mr-2" />
@@ -275,7 +292,7 @@ import { useToast } from './toast';
                 <div className="py-4 border-t border-slate-700/70">
                 <div className="flex flex-col space-y-2">
                     <Button
-                        onClick={() => { setSidebarMode('sql-input'); setIsMenuOpen(false); }}
+                        onClick={handleNewDiagramClick}
                         className="w-full px-3 py-2.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700 transition-colors border border-white/10"
                     >
                         <Plus className="size-4 mr-2" />
@@ -310,6 +327,7 @@ import { useToast } from './toast';
               <SqlFilesSidebar onFileLoad={handleSQLContent} />
             ) : (
               <SqlInputSidebar
+                key={sqlInputKey}
                 onBackClick={() => setSidebarMode('main')}
                 onSqlChange={handleSqlInputChange}
                 onFileLoad={handleSQLContent}
@@ -339,7 +357,7 @@ import { useToast } from './toast';
                     {parseMutation.error.error || 'Failed to parse SQL file'}
                     </p>
                     <Button
-                    onClick={() => setSidebarMode('sql-input')}
+                    onClick={handleNewDiagramClick}
                     variant="outline"
                     className="border-white/20 text-white hover:bg-white/10"
                     >

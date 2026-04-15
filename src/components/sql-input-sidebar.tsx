@@ -50,9 +50,8 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, onFileLoad, isLoadin
 
   const handleDatabaseTypeChange = (value: DatabaseType) => {
     setDatabaseType(value);
-    if (sql.trim()) {
-      onSqlChange(sql, value);
-    }
+    // Always trigger change to update parent state (e.g. active file badge dialect)
+    onSqlChange(sql, value);
   };
 
   const handleClear = () => {
