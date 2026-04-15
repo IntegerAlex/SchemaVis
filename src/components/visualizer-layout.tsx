@@ -30,7 +30,6 @@ import { useToast } from './toast';
 
     interface VisualizerLayoutProps {
     className?: string;
-    diagramId?: string | null;
     }
 
     // Helper function to format database type for display
@@ -233,7 +232,7 @@ import { useToast } from './toast';
                     alt="SchemaVis logo"
                     width={100}
                     height={100}
-                    className="h-16 w-16 object-contain scale-150 origin-left"
+                    className="h-10 w-10 object-contain"
                     priority
                     />
                     {selectedFileName && !parseMutation.isPending && (

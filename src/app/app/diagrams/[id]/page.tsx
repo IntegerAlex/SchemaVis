@@ -104,7 +104,7 @@ export default function DiagramPage() {
           </>
         ) : (
           <ParseSQLProvider>
-            <VisualizerLayout diagramId={diagramId} />
+            <VisualizerLayout />
             {showUsernameModal && (
               <UsernameSetupModal isOpen={showUsernameModal} onSuccess={handleUsernameSuccess} />
             )}

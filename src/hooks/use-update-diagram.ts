@@ -12,7 +12,6 @@ import type { Diagram } from '@/lib/domain/diagram';
 export interface UpdateDiagramParams {
   diagramId: string;
   content?: Record<string, unknown>;
-  version?: number;
   name?: string;
 }
 
@@ -25,13 +24,12 @@ export function useUpdateDiagram() {
 
   return useMutation({
     mutationFn: async (params: UpdateDiagramParams) => {
-      const { diagramId, content, version, name } = params;
+      const { diagramId, content, name } = params;
 
       const body: Record<string, unknown> = {};
       if (name !== undefined) body.name = name;
       if (content !== undefined) {
         body.content = content;
-        if (version !== undefined) body.version = version;
       }
 
       const response = await fetch(`/api/diagrams/${diagramId}`, {
@@ -60,11 +58,9 @@ export function useUpdateDiagram() {
 export function diagramToUpdateParams(
   diagram: Diagram,
   diagramId: string,
-  version: number
 ): UpdateDiagramParams {
   return {
     diagramId,
     content: domainToDbContent(diagram),
-    version,
   };
 }

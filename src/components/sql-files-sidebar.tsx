@@ -145,10 +145,12 @@ export function SqlFilesSidebar({ className, onFileLoad, activeFileName }: SqlFi
         blurTimeoutRef.current = null;
       }
 
-      // Guard against concurrent execution
+      // Guard against concurrent execution (synchronous check + set)
       if (isRenamingRef.current) return;
+      isRenamingRef.current = true;
 
       if (!renamingId || !renameValue.trim()) {
+        isRenamingRef.current = false;
         setRenamingId(null);
         return;
       }
@@ -169,6 +171,7 @@ export function SqlFilesSidebar({ className, onFileLoad, activeFileName }: SqlFi
       } catch (err) {
         console.error('Error renaming SQL file:', err);
       } finally {
+        isRenamingRef.current = false;
         setIsRenaming(false);
         setRenamingId(null);
       }

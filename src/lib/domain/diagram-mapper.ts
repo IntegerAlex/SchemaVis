@@ -43,10 +43,15 @@ export function dbDiagramToDomain(row: DbDiagramRow): Diagram {
     notes?: unknown[];
   };
 
+  const validDatabaseTypes = new Set<string>(Object.values(DatabaseType));
+  const databaseType = validDatabaseTypes.has(row.databaseType)
+    ? (row.databaseType as DatabaseType)
+    : DatabaseType.GENERIC;
+
   return {
     id: row.id,
     name: row.name,
-    databaseType: (row.databaseType as DatabaseType) ?? DatabaseType.GENERIC,
+    databaseType,
     tables: (content?.tables ?? []) as DBTable[],
     relationships: (content?.relationships ?? []) as DBRelationship[],
     dependencies: (content?.dependencies ?? []) as DBDependency[],
