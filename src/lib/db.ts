@@ -17,5 +17,13 @@ const pool = new Pool({
   ssl: connectionString.includes('localhost') ? undefined : { rejectUnauthorized: false },
 });
 
+export function getDbPoolStats() {
+  return {
+    totalCount: pool.totalCount,
+    idleCount: pool.idleCount,
+    waitingCount: pool.waitingCount,
+  };
+}
+
 export const db = drizzle(pool);
 

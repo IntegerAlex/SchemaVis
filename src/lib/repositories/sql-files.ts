@@ -197,3 +197,34 @@ export async function softDeleteSqlFile(userId: string, fileId: number) {
   return updated ?? null;
 }
 
+/**
+ * Update an existing SQL file's title and/or content
+ */
+export async function updateSqlFile(
+  userId: string,
+  fileId: number,
+  params: { title?: string | null; content?: string }
+) {
+  const setValues: Partial<typeof sqlFiles.$inferInsert> = { updatedAt: new Date() };
+  if (params.title !== undefined) {
+    setValues.title = params.title;
+  }
+  if (params.content !== undefined) {
+    setValues.content = params.content;
+  }
+
+  const [updated] = await db
+    .update(sqlFiles)
+    .set(setValues)
+    .where(and(eq(sqlFiles.id, fileId), eq(sqlFiles.userId, userId), isNull(sqlFiles.deletedAt)))
+    .returning({
+      id: sqlFiles.id,
+      title: sqlFiles.title,
+      content: sqlFiles.content,
+      createdAt: sqlFiles.createdAt,
+      updatedAt: sqlFiles.updatedAt,
+    });
+
+  return updated ?? null;
+}
+

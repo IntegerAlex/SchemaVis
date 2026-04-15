@@ -1,0 +1,203 @@
+export interface BlogPost {
+  slug: string;
+  title: string;
+  description: string;
+  content: string;
+  date: string;
+  author: string;
+  readTime: string;
+  keywords: string[];
+}
+
+export const blogs: BlogPost[] = [
+  {
+    slug: "understanding-sql-indexes-performance",
+    title: "Understanding SQL Indexes: How They Work and When to Use Them",
+    description:
+      "Learn how SQL database indexes work, including B-Tree and composite indexes. This guide covers when to use indexes, their performance impact on PostgreSQL and MySQL, and best practices for schema optimization.",
+    content:
+      "\nSQL indexes are critical structures used by relational database management systems (RDBMS) to speed up the retrieval of rows from a table. Without an index, a database must perform a \"full table scan,\" examining every row to find the ones matching a query. For large tables, this is highly inefficient.\n\n### How Indexes Work\n\nAt a fundamental level, an index is a separate data structure (most commonly a B-Tree) that stores a specific column's values along with a pointer to the corresponding row in the actual table. Because the B-Tree is sorted, the database can use binary search algorithms to find data in logarithmic time (O(log n)) rather than linear time (O(n)).\n\nFor example, if you frequently query a 'users' table by 'email':\n`SELECT * FROM users WHERE email = 'user@example.com';`\n\nAn index on the 'email' column allows the database engine to traverse the B-Tree, locate the email, and follow the pointer directly to the disk block containing the row.\n\n### Types of Indexes\n\n1. **Clustered Indexes**: These dictate the physical storage order of the data in the table. Because data can only be sorted in one way, there can be only one clustered index per table (usually the Primary Key).\n2. **Non-Clustered Indexes**: These are separate from the data. They contain the indexed values and row locators. A table can have multiple non-clustered indexes.\n3. **Composite Indexes**: An index spanning multiple columns. These are useful for queries filtering or sorting by multiple fields simultaneously.\n4. **Unique Indexes**: Ensure that no two rows have the same value for the indexed column(s).\n\n### When to Use Indexes\n\n- **Primary and Foreign Keys**: Always index these. Primary keys are usually indexed automatically. Indexing foreign keys drastically speeds up JOIN operations.\n- **Frequently Queried Columns**: Columns frequently appearing in WHERE, ORDER BY, or GROUP BY clauses are prime candidates.\n- **High Cardinality Columns**: Columns with many unique values (like email or username) benefit more from indexing than low cardinality columns (like boolean flags or gender).\n\n### The Cost of Indexing\n\nIndexes are not free. Every time an INSERT, UPDATE, or DELETE operation occurs, the database must also update the corresponding indexes. This adds write overhead. Furthermore, indexes consume additional disk space and memory.\n\nTherefore, the goal is not to index every column, but to create a strategic set of indexes that optimize your most critical and frequent read queries without causing unacceptable degradation to your write performance.\n\n### Best Practices\n\n- Monitor query execution plans using 'EXPLAIN' or 'EXPLAIN ANALYZE'.\n- Drop unused or redundant indexes.\n- Be cautious with indexes on tables with high write-to-read ratios.\n- Consider partial indexes if you only ever query a specific subset of data.\n",
+    date: "2025-10-15",
+    author: "Akshat Kotpalliwar",
+    readTime: "5 min read",
+    keywords: [
+      "SQL",
+      "Database Indexing",
+      "B-Tree",
+      "Performance Optimization",
+      "PostgreSQL",
+      "MySQL",
+    ],
+  },
+  {
+    slug: "database-normalization-explained-1nf-2nf-3nf",
+    title: "Database Normalization Explained: 1NF, 2NF, 3NF",
+    description:
+      "Master database normalization from First Normal Form (1NF) through Third Normal Form (3NF). Learn how to reduce data redundancy, eliminate update anomalies, and design clean relational schemas.",
+    content:
+      "\nDatabase normalization is a systematic approach to organizing data within a relational database. The primary goals are to reduce data redundancy (storing the same data in multiple places) and to improve data integrity. Normalization involves dividing large tables into smaller, less redundant tables and defining relationships between them.\n\nThe process is guided by a series of rules known as Normal Forms (NF). While higher normal forms exist, achieving the Third Normal Form (3NF) is the standard for most transactional databases (OLTP).\n\n### First Normal Form (1NF)\n\nTo satisfy 1NF, a table must meet the following criteria:\n1. **Atomic Values**: Each column must hold indivisible (atomic) values. No arrays, lists, or comma-separated values in a single cell.\n2. **Unique Column Names**: Each column in a table must have a unique name.\n3. **No Repeating Groups**: You should not have multiple columns representing the same attribute (e.g., Phone1, Phone2, Phone3).\n\n*Fixing 1NF Violations*: If a user has multiple phone numbers, create a separate 'user_phones' table with a foreign key linking back to the 'users' table, rather than storing them in a single column or multiple numbered columns.\n\n### Second Normal Form (2NF)\n\nTo achieve 2NF, a table must:\n1. Be in 1NF.\n2. Have no **Partial Dependency**. This means all non-key attributes must depend on the *entire* primary key. \n\n*Context*: This only applies if a table has a composite primary key (a primary key made of two or more columns). If a column depends on only one part of the composite key, it violates 2NF.\n\n*Fixing 2NF Violations*: Move the partially dependent columns into a new table where the part of the composite key they depend on becomes the sole primary key.\n\n### Third Normal Form (3NF)\n\nTo achieve 3NF, a table must:\n1. Be in 2NF.\n2. Have no **Transitive Dependency**. This means a non-key column must not depend on another non-key column. All non-key columns must depend *only* on the primary key.\n\n*Example*: Consider a 'orders' table containing 'customer_id', 'customer_name', and 'customer_address'. 'customer_name' and 'customer_address' depend on 'customer_id', not the 'order_id' (the primary key).\n\n*Fixing 3NF Violations*: Extract the transitively dependent columns into a new table (e.g., a 'customers' table) and leave the foreign key ('customer_id') in the original table.\n\n### Denormalization\n\nWhile normalization is crucial for data integrity and reducing update anomalies, strict adherence can sometimes lead to complex queries requiring numerous JOINs, which can degrade read performance. In analytical databases (OLAP) or high-read systems, engineers may intentionally *denormalize* data, accepting some redundancy in exchange for faster read times. Understanding normalization is a prerequisite to knowing when and how to safely denormalize.\n",
+    date: "2025-10-18",
+    author: "Akshat Kotpalliwar",
+    readTime: "6 min read",
+    keywords: [
+      "Database Design",
+      "Normalization",
+      "1NF",
+      "2NF",
+      "3NF",
+      "Relational Schema",
+      "Data Integrity",
+    ],
+  },
+  {
+    slug: "sql-joins-demystified-inner-outer-cross",
+    title: "SQL JOINs Demystified: Inner, Outer, Left, Right and Cross",
+    description:
+      "A complete guide to SQL JOIN operations — INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN, and CROSS JOIN — with syntax examples for PostgreSQL, MySQL, and SQL Server.",
+    content:
+      "\nIn relational databases, data is distributed across multiple normalized tables. To assemble meaningful information, you must combine data from these tables. This is achieved using SQL JOIN operations. A JOIN clause combines rows from two or more tables based on a related column between them.\n\nUnderstanding the mechanical differences between join types is essential for writing accurate and performant SQL queries.\n\n### INNER JOIN\n\nAn `INNER JOIN` returns only the rows where there is a match in *both* tables based on the join condition. It is the most common and generally the fastest join operation.\n\n```sql\nSELECT customers.name, orders.order_date\nFROM customers\nINNER JOIN orders ON customers.id = orders.customer_id;\n```\nIf a customer has no orders, they will not appear in the result set. If an order has a null customer_id, it will also be excluded.\n\n### LEFT JOIN (LEFT OUTER JOIN)\n\nA `LEFT JOIN` returns *all* rows from the left table (the one specified before the JOIN keyword), and the matched rows from the right table. If there is no match, the result will contain NULL values for the right table's columns.\n\n```sql\nSELECT customers.name, orders.order_date\nFROM customers\nLEFT JOIN orders ON customers.id = orders.customer_id;\n```\nThis query returns every customer. If a customer has placed orders, the `order_date` is shown. If a customer has never placed an order, they still appear in the results, but the `order_date` will be NULL.\n\n### RIGHT JOIN (RIGHT OUTER JOIN)\n\nA `RIGHT JOIN` is the conceptual mirror of a LEFT JOIN. It returns all rows from the right table, and the matched rows from the left table. Unmatched rows from the left table will result in NULLs.\n\nIn practice, `RIGHT JOIN` is rarely used because any query using it can be rewritten as a `LEFT JOIN` simply by reversing the order of the tables. Sticking to `LEFT JOIN` improves query readability across teams.\n\n### FULL OUTER JOIN\n\nA `FULL OUTER JOIN` returns all rows when there is a match in *either* the left or right table. It is essentially a combination of a LEFT JOIN and a RIGHT JOIN. Where there is no match, the missing side will contain NULL values.\n\nThis join is computationally expensive and used less frequently, typically for reconciling missing data between two distinct datasets. Note: MySQL does not natively support FULL OUTER JOIN; you must use a UNION of a LEFT and RIGHT join.\n\n### CROSS JOIN\n\nA `CROSS JOIN` returns the Cartesian product of the two tables. This means it joins every row of the left table with every row of the right table. It does not use an 'ON' condition.\n\n```sql\nSELECT colors.name, sizes.name\nFROM colors\nCROSS JOIN sizes;\n```\nIf you have 10 colors and 5 sizes, a CROSS JOIN produces 50 rows (every possible combination). Use this with extreme caution on large tables, as the result set size grows exponentially (N * M).\n\n### Performance Considerations\n\n- Always ensure that the columns used in your `ON` clauses (typically foreign keys) are indexed.\n- Filter data as early as possible. Applying a `WHERE` clause to reduce the dataset before the database engine performs the join can drastically improve execution time.\n",
+    date: "2025-10-22",
+    author: "Akshat Kotpalliwar",
+    readTime: "7 min read",
+    keywords: [
+      "SQL",
+      "JOIN",
+      "INNER JOIN",
+      "LEFT JOIN",
+      "Database Query",
+      "SQL Server",
+      "PostgreSQL",
+    ],
+  },
+  {
+    slug: "optimizing-sql-queries-best-practices",
+    title: "Optimizing SQL Queries: Best Practices for Performance",
+    description:
+      "Speed up slow SQL queries with proven optimization techniques. Learn to use EXPLAIN plans, fix N+1 query problems, write sargable predicates, and avoid common performance pitfalls in PostgreSQL and MySQL.",
+    content:
+      "\nSlow database queries are a primary bottleneck in application performance. As datasets grow, inefficient SQL that previously executed in milliseconds can suddenly take seconds or minutes. Optimizing SQL requires an understanding of how the database engine executes queries and accesses data on disk.\n\nHere are core best practices for writing high-performance SQL.\n\n### 1. Avoid SELECT *\n\nFetching all columns using `SELECT *` forces the database to read and transmit data you may not need. This wastes disk I/O, memory, and network bandwidth. Furthermore, it prevents the database engine from utilizing \"Index-Only Scans.\" If you specify exactly the columns you need, and those columns are entirely contained within an index, the database can fulfill the query without ever touching the actual table data.\n\n*Bad:* `SELECT * FROM users WHERE status = 'active';`\n*Good:* `SELECT id, email, created_at FROM users WHERE status = 'active';`\n\n### 2. Use the EXPLAIN Command\n\nBefore optimizing a query, you must understand how the database executes it. Prefixing your query with `EXPLAIN` (or `EXPLAIN ANALYZE` in PostgreSQL) provides the execution plan. It reveals whether the database is using indexes, performing full table scans, or executing costly operations like hash aggregates or nested loop joins.\n\nIf you see a \"Seq Scan\" (Sequential Scan) on a table with millions of rows, that is your primary target for indexing or query refactoring.\n\n### 3. Beware of the N+1 Query Problem\n\nThis is a common issue introduced by ORMs (Object-Relational Mappers). It occurs when the application executes one query to fetch N parent records, and then executes N additional queries to fetch the related child records for each parent.\n\n*The N+1 approach:*\n1. `SELECT * FROM authors;` (Returns 100 authors)\n2. `SELECT * FROM books WHERE author_id = 1;`\n3. ... (Repeated 100 times)\n\n*The optimized approach:* Use a JOIN or a WHERE IN clause to fetch all data in a single round trip.\n`SELECT authors.name, books.title FROM authors JOIN books ON authors.id = books.author_id;`\n\n### 4. Optimize LIKE Queries\n\nUsing the `LIKE` operator with leading wildcards (`%term`) forces a full table scan because the database cannot utilize a standard B-Tree index to find matches that start with unknown characters.\n\n*Slow:* `SELECT * FROM products WHERE name LIKE '%phone';`\n*Fast:* `SELECT * FROM products WHERE name LIKE 'phone%';` (Can use an index)\n\nIf you need robust full-text search capabilities, do not rely on `LIKE`. Use native full-text search features (like PostgreSQL's `tsvector`), or dedicated search engines like Elasticsearch.\n\n### 5. Be Careful with Functions in WHERE Clauses\n\nApplying a function to a column in a `WHERE` clause often prevents the database from using an index on that column. This is known as making the predicate \"non-sargable\" (Search Argument Able).\n\n*Non-sargable (Ignores index):* `SELECT * FROM events WHERE YEAR(created_at) = 2024;`\n*Sargable (Uses index):* `SELECT * FROM events WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01';`\n\nIf you frequently need to filter by a function's result, consider creating an expression index (or function-based index) if your RDBMS supports it.\n",
+    date: "2025-10-28",
+    author: "Akshat Kotpalliwar",
+    readTime: "6 min read",
+    keywords: [
+      "SQL Optimization",
+      "Database Performance",
+      "EXPLAIN",
+      "N+1 Query",
+      "Indexing",
+      "Sargable",
+    ],
+  },
+  {
+    slug: "acid-properties-in-databases-explained",
+    title: "ACID Properties in Databases: Why Transaction Integrity Matters",
+    description:
+      "Understand ACID properties — Atomicity, Consistency, Isolation, and Durability — and how they guarantee transaction integrity in PostgreSQL, MySQL, and SQL Server. Essential knowledge for backend engineers.",
+    content:
+      "\nIn the realm of relational databases, a transaction is a single logical unit of work that may consist of one or multiple SQL operations. To ensure data remains accurate, predictable, and reliable even in the event of system crashes or concurrent access, transactional databases adhere to a set of principles known by the acronym ACID.\n\nUnderstanding ACID properties is fundamental for backend engineers designing systems that handle financial transactions, inventory management, or any critical state changes.\n\n### A: Atomicity (All or Nothing)\n\nAtomicity guarantees that all operations within a transaction are treated as a single, indivisible unit. If any individual operation within the transaction fails, the entire transaction is aborted, and the database state is rolled back to exactly how it was before the transaction began.\n\n*Example*: Consider a bank transfer transferring $100 from Account A to Account B.\n1. Deduct $100 from A.\n2. Add $100 to B.\n\nIf the system crashes after step 1, Atomicity ensures the $100 deduction from A is rolled back. The database will never be left in an intermediate state where money disappeared.\n\n### C: Consistency (Validity of Data)\n\nConsistency ensures that a transaction can only bring the database from one valid state to another valid state. The database must adhere to all defined rules, including constraints, cascades, triggers, and combinations thereof.\n\nIf a transaction attempts to insert data that violates a constraint (e.g., a UNIQUE constraint on an email address, or a FOREIGN KEY constraint), the database will reject the operation, preventing corruption of the schema's defined integrity.\n\n### I: Isolation (Concurrency Control)\n\nIsolation determines how transaction integrity is visible to other users and systems. When multiple users are reading and writing to the database simultaneously, Isolation ensures that concurrent transactions execute as if they were executed sequentially.\n\nDatabases offer different Isolation Levels, trading off strictness for performance:\n- **Read Uncommitted**: Lowest level, allows reading uncommitted data (Dirty Reads).\n- **Read Committed**: Guarantees data read is committed at the moment it is read.\n- **Repeatable Read**: Ensures that if a row is read twice in a transaction, the value remains the same.\n- **Serializable**: Highest level, strictly prevents concurrent transactions from interfering with each other, often via extensive locking.\n\n### D: Durability (Permanent Storage)\n\nDurability guarantees that once a transaction has been successfully committed, it will remain permanently recorded in the database, surviving system failures, power outages, or crashes.\n\nDatabases achieve Durability through mechanisms like Write-Ahead Logging (WAL). When a transaction commits, the changes are first flushed to a sequential log on disk before being applied to the actual data files. If the system crashes, upon reboot, the database replays the WAL to recover any committed transactions that were not yet fully written to the data files.\n\n### Why ACID Matters\n\nWhile many modern NoSQL databases relax ACID guarantees in favor of eventual consistency and horizontal scalability (following the CAP theorem), relational databases (like PostgreSQL, MySQL, and SQL Server) prioritize ACID to guarantee absolute data correctness. When designing systems where data anomalies are unacceptable, ACID-compliant databases remain the gold standard.\n",
+    date: "2025-11-02",
+    author: "Akshat Kotpalliwar",
+    readTime: "5 min read",
+    keywords: [
+      "ACID",
+      "Database Transactions",
+      "Atomicity",
+      "Isolation Levels",
+      "Data Integrity",
+      "RDBMS",
+    ],
+  },
+  {
+    slug: "b-tree-vs-hash-indexes-in-databases",
+    title: "Understanding B-Tree Indexes vs Hash Indexes in Databases",
+    description:
+      "Compare B-Tree and Hash indexes side-by-side. Learn their data structures, time complexities, and when to use each index type in PostgreSQL and MySQL for optimal query performance.",
+    content:
+      "\nWhen you create an index in a SQL database using `CREATE INDEX`, the database engine typically defaults to a B-Tree (Balanced Tree) structure. However, many relational databases (like PostgreSQL and MySQL's Memory engine) also support Hash indexes. \n\nChoosing the right index type requires understanding the mathematical structures behind them and the types of queries they excel at serving.\n\n### The B-Tree Index\n\nA B-Tree (specifically, a B+ Tree in most database implementations) is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time (O(log n)).\n\n**How it works:**\nThe data is stored in hierarchical nodes. The root node points to branch nodes, which eventually point to leaf nodes. In a B+ Tree, the actual data pointers (locators to the table rows) are stored only in the leaf nodes, and these leaf nodes are linked together in a doubly-linked list.\n\n**Strengths:**\nBecause the B-Tree stores data in a sorted order, it is incredibly versatile. It is the optimal choice for:\n- **Exact matches:** `WHERE age = 30`\n- **Range queries:** `WHERE age BETWEEN 20 AND 40`\n- **Inequalities:** `WHERE age > 25`\n- **Sorting:** `ORDER BY age DESC`\n- **Prefix matching:** `WHERE name LIKE 'Sm%'`\n\n### The Hash Index\n\nA Hash index uses a hash function to map a specific column value to a \"bucket\" that contains a pointer to the corresponding row in the table. \n\n**How it works:**\nWhen you query a hashed column, the database applies the same hash function to your search term, calculates the bucket address, and goes directly to that bucket. This provides O(1) (constant time) lookup speed, regardless of how large the table grows.\n\n**Strengths:**\nHash indexes are extremely fast for one specific operation:\n- **Exact equality matches:** `WHERE session_id = 'abc-123'`\n\n**Limitations:**\nBecause a hash function scrambles the input to distribute data evenly across buckets, Hash indexes completely lose the concept of sorting or ordering. Therefore, they are useless for:\n- Range queries (BETWEEN, >, <)\n- Sorting (ORDER BY)\n- Prefix matching (LIKE 'term%')\n\nFurthermore, Hash indexes historically suffered from slower rebuild times and didn't support multi-column (composite) indexing well, though modern implementations like PostgreSQL 10+ have improved this significantly.\n\n### Which Should You Choose?\n\nIn 95% of scenarios, the default **B-Tree index is the correct choice**. Its versatility covers the vast majority of application querying patterns, and O(log n) lookup time is exceptionally fast even for billions of rows.\n\nYou should explicitly choose a **Hash index** only when you have a specific column that is *only* ever queried for exact equality (e.g., looking up a user session token, a unique UUID, or an exact key-value pair) and you need to squeeze out absolute maximum read performance for that specific query.\n",
+    date: "2025-11-08",
+    author: "Akshat Kotpalliwar",
+    readTime: "4 min read",
+    keywords: [
+      "B-Tree",
+      "Hash Index",
+      "Database Architecture",
+      "SQL",
+      "PostgreSQL",
+      "Performance Tuning",
+    ],
+  },
+  {
+    slug: "common-sql-antipatterns",
+    title: "Common SQL Antipatterns and How to Avoid Them",
+    description:
+      "Identify and fix common SQL antipatterns including Entity-Attribute-Value, comma-separated lists, and polymorphic associations. Learn how to refactor bad schema designs for better performance and maintainability.",
+    content:
+      "\nSQL antipatterns are common, recurring mistakes in database schema design and query writing. While they might seem like pragmatic solutions initially, they inevitably lead to poor performance, complex queries, and data integrity issues as the application scales.\n\nHere are some of the most prevalent SQL antipatterns and how to refactor them.\n\n### 1. The Entity-Attribute-Value (EAV) Pattern\n\n**The Antipattern:** Storing dynamic attributes in a single table with three columns: Entity ID, Attribute Name, and Attribute Value. This is often done to avoid altering the schema when new attributes are needed.\n\n**The Problem:** EAV destroys data integrity. You cannot enforce data types (everything is usually stored as a string), you cannot easily make attributes required, and querying becomes a nightmare of endless self-joins to assemble a single complete entity.\n\n**The Solution:** Use standard relational columns. If the schema is truly highly dynamic, utilize native JSON/JSONB data types supported by modern databases like PostgreSQL and MySQL. JSONB allows for dynamic schemas while still supporting indexing and relatively fast querying.\n\n### 2. Comma-Separated Lists\n\n**The Antipattern:** Storing multiple values in a single text column separated by commas (e.g., a 'tags' column containing 'sql,database,performance').\n\n**The Problem:** This violates First Normal Form. It is impossible to use standard indexes to find rows containing a specific tag. Updates require complex string manipulation. You cannot use foreign keys to ensure the tags actually exist in a master tags table.\n\n**The Solution:** Create an intersection (junction) table to model a many-to-many relationship. For example, a `post_tags` table containing `post_id` and `tag_id`.\n\n### 3. Polymorphic Associations\n\n**The Antipattern:** A table referencing multiple parent tables using two columns: `parent_id` and `parent_type`. For example, a 'comments' table that can belong to either a 'post' or an 'image'.\n\n**The Problem:** You cannot define a Foreign Key constraint. The database cannot enforce referential integrity because a single column (`parent_id`) cannot point to multiple different tables. Orphaned records are inevitable.\n\n**The Solution:** Use an exclusive arc (multiple nullable foreign keys where only one can be NOT NULL via a CHECK constraint) or create separate junction tables for each parent type (e.g., `post_comments` and `image_comments`).\n\n### 4. Fetching Data to Perform Logic in the Application\n\n**The Antipattern:** Writing a simple `SELECT * FROM users` and then writing a loop in Python, Node.js, or Java to aggregate the data, filter it, or calculate sums.\n\n**The Problem:** Databases are highly optimized C/C++ engines designed specifically for data manipulation. Transferring thousands of rows across the network only to sum them up in an application consumes massive amounts of memory and network bandwidth.\n\n**The Solution:** Push the compute to the data. Use SQL's powerful aggregate functions (`SUM`, `AVG`, `COUNT`), `GROUP BY` clauses, and Window Functions to perform calculations inside the database. Return only the final result to the application.\n",
+    date: "2025-11-12",
+    author: "Akshat Kotpalliwar",
+    readTime: "6 min read",
+    keywords: [
+      "SQL Antipatterns",
+      "EAV",
+      "Polymorphic Associations",
+      "Database Design",
+      "JSONB",
+      "Refactoring",
+    ],
+  },
+  {
+    slug: "primary-keys-and-foreign-keys-relational-design",
+    title: "The Role of Primary Keys and Foreign Keys in Relational Design",
+    description:
+      "Learn how Primary Keys uniquely identify rows and Foreign Keys enforce referential integrity across tables. Covers surrogate vs natural keys, cascading actions, and why you should always index foreign keys.",
+    content:
+      "\nAt the heart of the relational database model lies the concept of identifying and relating data. Without strict mechanisms to ensure that data can be uniquely identified and correctly linked across tables, a database degrades into a disorganized collection of spreadsheets. \n\nThis strict structure is enforced using two primary constraints: Primary Keys and Foreign Keys.\n\n### The Primary Key (PK)\n\nA Primary Key is a column, or a combination of columns, that uniquely identifies every single row within a table. \n\n**Characteristics of a Primary Key:**\n1. **Uniqueness:** No two rows can have the same primary key value.\n2. **Not Null:** A primary key column cannot contain NULL values. Every record must be identifiable.\n3. **Immutable (Ideally):** While technically possible to update in some RDBMS, primary key values should rarely or never change. Changing a PK requires cascading updates to all related tables, which is expensive and risky.\n\n**Types of Primary Keys:**\n- **Surrogate Keys:** Artificial keys generated by the database specifically to act as an identifier (e.g., an auto-incrementing integer or a UUID). These carry no business meaning and are generally the preferred approach in modern web development.\n- **Natural Keys:** Existing attributes within the data that happen to be unique (e.g., a Social Security Number or an ISBN for a book). While conceptually elegant, natural keys can break if the real-world business rules change.\n\n### The Foreign Key (FK)\n\nA Foreign Key is a column or set of columns in one table that references the Primary Key of another table. It establishes a link between the data in the two tables.\n\n**The Purpose of Foreign Keys: Referential Integrity**\nThe most critical role of a foreign key is to enforce referential integrity. When you define a foreign key constraint, the database engine actively prevents you from inserting invalid data.\n\nIf an `orders` table has a `customer_id` foreign key pointing to the `customers` table, the database guarantees that you cannot insert an order for a `customer_id` that does not exist. \n\nFurthermore, foreign keys dictate what happens when referenced data is modified. Using `ON DELETE` and `ON UPDATE` clauses, you can instruct the database to:\n- **RESTRICT / NO ACTION:** Prevent the deletion of a customer if they have existing orders.\n- **CASCADE:** Automatically delete all orders belonging to a customer if that customer is deleted.\n- **SET NULL:** Leave the orders in place but set the `customer_id` to NULL when the customer is deleted.\n\n### Indexing Foreign Keys\n\nWhile most databases automatically index Primary Keys, they do *not* automatically index Foreign Keys. Because foreign keys are the primary columns used in `JOIN` operations, **you should manually create an index on almost every foreign key column**. Failure to do so will result in slow JOINs and severe performance degradation during cascading deletes.\n",
+    date: "2025-11-18",
+    author: "Akshat Kotpalliwar",
+    readTime: "5 min read",
+    keywords: [
+      "Primary Key",
+      "Foreign Key",
+      "Referential Integrity",
+      "Database Constraints",
+      "SQL Design",
+    ],
+  },
+  {
+    slug: "views-vs-materialized-views-performance",
+    title: "Views vs Materialized Views: A Performance Comparison",
+    description:
+      "Understand the key differences between standard SQL Views and Materialized Views. Learn when to use each for query abstraction, security, and read-heavy performance optimization in PostgreSQL.",
+    content:
+      "\nAs database schemas grow in complexity, developers frequently write complex SQL queries involving multiple joins, aggregations, and subqueries. To simplify application code and abstract this complexity, databases provide structural features known as Views. \n\nUnderstanding the critical difference between a standard View and a Materialized View is essential for system architecture and performance tuning.\n\n### Standard Views: Virtual Tables\n\nA standard View is essentially a saved SQL query. It acts as a \"virtual table.\" When you query a View, the database engine takes the underlying SQL query that defines the view, combines it with your current query, and executes the whole operation against the live, underlying tables.\n\n```sql\nCREATE VIEW active_premium_users AS\nSELECT u.id, u.name, s.plan_name\nFROM users u\nJOIN subscriptions s ON u.id = s.user_id\nWHERE s.status = 'active' AND s.tier = 'premium';\n```\n\n**Pros of Standard Views:**\n- **Abstraction:** Hides complex joins from application developers.\n- **Real-time Data:** Because the query executes at runtime, the data returned is always 100% up-to-date.\n- **Security:** You can grant users permission to read the View without granting access to the underlying tables.\n\n**Cons of Standard Views:**\n- **Performance:** They do not improve query performance. If the underlying query is slow and complex, querying the View will be equally slow.\n\n### Materialized Views: Cached Results\n\nA Materialized View is profoundly different. When a Materialized View is created, the database executes the query and **physically saves the result set to disk** as if it were a real table. When you query a Materialized View, you are reading this pre-computed, stored data.\n\n```sql\nCREATE MATERIALIZED VIEW monthly_sales_summary AS\nSELECT DATE_TRUNC('month', order_date) as month, SUM(total) as revenue\nFROM orders\nGROUP BY DATE_TRUNC('month', order_date);\n```\n\n**Pros of Materialized Views:**\n- **Massive Performance Gains:** Complex aggregations and multi-table joins are pre-calculated. Querying the Materialized View is as fast as querying a simple, flat table. You can also create indexes directly on the Materialized View.\n\n**Cons of Materialized Views:**\n- **Stale Data:** The data in the Materialized View only represents a snapshot of the moment it was created or last updated. As live tables change, the Materialized View falls out of sync.\n- **Refresh Cost:** You must manually trigger a refresh (e.g., `REFRESH MATERIALIZED VIEW`). Refreshing recalculates the entire query and rewrites the stored data, which consumes CPU and I/O resources.\n\n### When to Use Which\n\nUse **Standard Views** for real-time reporting, security abstraction, and simplifying queries where the underlying data size or join complexity does not cause performance issues.\n\nUse **Materialized Views** for dashboards, data warehousing, and heavy aggregations where query response time is critical, and the application can tolerate reading data that might be minutes or hours old (eventual consistency).\n",
+    date: "2025-11-25",
+    author: "Akshat Kotpalliwar",
+    readTime: "5 min read",
+    keywords: [
+      "Database Views",
+      "Materialized Views",
+      "SQL Performance",
+      "Data Caching",
+      "PostgreSQL Views",
+    ],
+  },
+  {
+    slug: "managing-deadlocks-in-relational-databases",
+    title: "Managing Deadlocks in Relational Databases",
+    description:
+      "Learn what causes database deadlocks in concurrent transactions and how to prevent them. Covers consistent access ordering, short transaction patterns, isolation levels, and retry strategies for PostgreSQL and SQL Server.",
+    content:
+      '\nIn high-concurrency relational databases, multiple transactions frequently compete for access to the same rows. Database engines use locking mechanisms to ensure data integrity during these concurrent operations. However, this necessary locking can lead to a critical failure state known as a Deadlock.\n\n### What is a Deadlock?\n\nA deadlock occurs when two or more concurrent transactions are waiting for each other to release locks, creating a circular dependency. Because neither transaction can proceed until the other releases its lock, they are stuck indefinitely.\n\n**A Classic Deadlock Scenario:**\n- **Transaction A** acquires an exclusive lock on Row 1.\n- **Transaction B** acquires an exclusive lock on Row 2.\n- **Transaction A** attempts to update Row 2, but must wait for Transaction B to release its lock.\n- **Transaction B** attempts to update Row 1, but must wait for Transaction A to release its lock.\n\nThe database engine continuously monitors for this cycle. When it detects a deadlock, it intervenes by forcibly aborting (rolling back) one of the transactions—known as the "victim"—to allow the other to complete. The aborted transaction throws a specific deadlock error to the application.\n\n### Strategies for Preventing Deadlocks\n\nWhile it is impossible to entirely eliminate deadlocks in highly concurrent systems, you can architect your operations to minimize their frequency.\n\n#### 1. Consistent Access Order\nThis is the most effective prevention strategy. Ensure that all transactions across your application acquire locks on objects in the exact same order. If all transactions lock Row 1 before locking Row 2, a circular dependency cannot form. Transaction B will simply queue behind Transaction A on Row 1.\n\n#### 2. Keep Transactions Short and Fast\nThe longer a transaction runs, the longer it holds locks, increasing the window of opportunity for a deadlock.\n- Do not perform slow operations (like network calls or complex application logic) inside a transaction block.\n- Gather all necessary data before beginning the transaction, execute the SQL rapidly, and commit immediately.\n\n#### 3. Appropriate Isolation Levels\nHigher isolation levels (like Serializable) require more extensive locking and increase the probability of deadlocks. Use the lowest isolation level (e.g., Read Committed) that safely satisfies your business logic requirements.\n\n### Handling Deadlocks in the Application\n\nBecause database engines automatically resolve the deadlock by killing one transaction, your application code must be prepared to handle the resulting exception gracefully.\n\nA deadlock error does not mean the data was invalid; it simply means it encountered a concurrency collision. The correct application-level response is to **catch the deadlock exception and retry the transaction**.\n\nImplementing a robust retry loop with exponential backoff ensures that the aborted transaction automatically attempts the operation again a few milliseconds later, completely transparently to the end-user.\n',
+    date: "2025-11-30",
+    author: "Akshat Kotpalliwar",
+    readTime: "6 min read",
+    keywords: [
+      "Database Deadlocks",
+      "Concurrency",
+      "Transaction Locking",
+      "SQL Server",
+      "PostgreSQL",
+      "Retry Logic",
+    ],
+  },
+];

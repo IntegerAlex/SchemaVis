@@ -1,0 +1,60 @@
+# SchemaVis
+
+> Free Open Source Database Schema Visualizer
+
+SchemaVis is a web-based, interactive database schema visualizer built with modern web technologies. It allows developers to instantly generate Entity-Relationship (ER) diagrams from raw SQL files (DDL statements) without needing to connect directly to a live database.
+
+## Architecture & Tech Stack
+
+- **Framework:** Next.js (App Router), React, TypeScript
+- **Styling:** Tailwind CSS (v4), Radix UI primitives, Lucide Icons
+- **Database / ORM:** PostgreSQL, Drizzle ORM
+- **Authentication:** Clerk
+- **Diagramming / Canvas:** React Flow (xyflow), D3.js (for layout/dragging)
+- **Data Fetching:** React Query (TanStack Query)
+- **Hosting:** Vercel (recommended)
+
+## Core Capabilities
+
+1.  **SQL Parsing:**
+    -   Located in `src/lib/parsers/`.
+    -   Supports multiple SQL dialects: PostgreSQL, MySQL, MariaDB, SQL Server, SQLite, Oracle, and a Generic fallback.
+    -   Extracts tables, columns, data types, primary keys, foreign keys (relationships), indexes, and constraints from DDL strings.
+2.  **Interactive Visualization:**
+    -   Located in `src/components/chart-canvas.tsx` and `src/components/visualizer-layout.tsx`.
+    -   Renders tables as nodes and foreign keys as draggable edges.
+    -   Features include zooming, panning, auto-layout, focused table mode, and interactive minimap.
+3.  **File Management:**
+    -   Users can upload `.sql` files or paste SQL directly.
+    -   Authenticated users can save multiple SQL files/diagrams to their account.
+4.  **Collaboration & Sharing (Alpha):**
+    -   Shareable links (`/share/[token]`) for read-only viewing of diagrams.
+    -   Real-time presence and commenting (partially implemented via Server-Sent Events / WebSockets).
+
+## Project Structure (Key Directories)
+
+-   `/src/app`: Next.js App Router. Contains all pages and API routes.
+    -   `/src/app/api`: Backend endpoints (diagrams, files, health, metrics, Clerk webhooks).
+    -   `/src/app/app`: The main application interface (protected route).
+    -   `/src/app/blogs`: SEO-optimized technical engineering blog.
+    -   `/src/app/*-vs-schemavis`: SEO competitor comparison pages.
+-   `/src/components`: React components.
+    -   `/src/components/ui`: Reusable, atomic UI components (often Radix/shadcn-ui based).
+    -   `/src/components/comments`: Collaboration components.
+-   `/src/context`: React Context providers (ParseSQL, DiagramEvents, Collaboration).
+-   `/src/hooks`: Custom React hooks for data fetching and state management.
+-   `/src/lib`: Core business logic.
+    -   `/src/lib/domain`: TypeScript interfaces for database structures (Tables, Fields, Relationships).
+    -   `/src/lib/parsers`: The custom SQL parsing engine.
+    -   `/src/lib/db.ts`: Drizzle database connection.
+
+## API & Integrations
+
+-   The application relies on Clerk for user identity (`/api/wekbook` handles Clerk events).
+-   A PostgreSQL database is required for storing saved diagrams, comments, and file metadata (`drizzle/` contains migrations).
+
+## Links
+
+-   Website: https://schemavis.gossorg.in
+-   Application: https://schemavis.gossorg.in/app
+-   GitHub Repository: https://github.com/IntegerAlex/SchemaVis

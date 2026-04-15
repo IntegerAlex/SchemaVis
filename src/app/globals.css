@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;
@@ -140,4 +141,28 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ───── Performance optimizations ───── */
+
+/* Promote the ReactFlow canvas to its own compositing layer */
+.react-flow {
+  contain: layout style;
+}
+
+/* Isolate each node to avoid layout thrashing during drag/pan */
+.react-flow__node {
+  contain: layout style;
+  will-change: transform;
+}
+
+/* MiniMap and Controls don't affect main layout */
+.react-flow__minimap,
+.react-flow__controls {
+  contain: strict;
+}
+
+/* Isolate React Flow edges to limit layout and style recalculation */
+.react-flow__edges {
+  contain: layout style;
 }
