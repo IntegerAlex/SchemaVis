@@ -151,6 +151,7 @@ export function SqlFilesSidebar({ className, onFileLoad, activeFileName }: SqlFi
 
       if (!renamingId || !renameValue.trim()) {
         isRenamingRef.current = false;
+        setIsRenaming(false);
         setRenamingId(null);
         return;
       }
