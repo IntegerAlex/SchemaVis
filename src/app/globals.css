@@ -161,11 +161,6 @@ body {
   contain: strict;
 }
 
-/* Reduce paint area for sidebar transitions */
-.sql-files-sidebar-container {
-  contain: layout style;
-}
-
 /* Use GPU-accelerated transforms for smoother scrolling in file lists */
 .react-flow__edges {
   contain: layout style;
