@@ -349,7 +349,7 @@ export function SqlFilesSidebar({ className, onFileLoad, activeFileName }: SqlFi
           {!isLoading && !error && files.length > 0 && (
             <div className={cn("space-y-1 overflow-x-hidden", collapsed ? "px-2" : "px-2")} role="list" aria-label={`List of ${files.length} SQL ${files.length === 1 ? 'file' : 'files'}`}>
               {files.map((file) => {
-                const isActive = activeFileName && (activeFileName === file.title || (!file.title && activeFileName === `Untitled ${file.id}`));
+                const isActive = activeFileName && (activeFileName === file.title || (!file.title && activeFileName === `File ${file.id}`));
                 return (
                   <div
                     key={file.id}
