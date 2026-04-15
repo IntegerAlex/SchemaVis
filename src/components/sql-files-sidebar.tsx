@@ -155,6 +155,8 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
     setRenameValue('');
   }, []);
 
+  const RENAME_BLUR_DEBOUNCE_MS = 150;
+
   const handleRenameBlur = React.useCallback(() => {
     // Small delay to allow button clicks to register before blur cancels the rename
     setTimeout(() => {
@@ -164,7 +166,7 @@ export function SqlFilesSidebar({ className, onFileLoad }: SqlFilesSidebarProps)
         }
         return current;
       });
-    }, 150);
+    }, RENAME_BLUR_DEBOUNCE_MS);
   }, [isRenaming, handleRenameConfirm]);
 
   const handleRenameKeyDown = React.useCallback(

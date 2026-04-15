@@ -50,6 +50,8 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
     setSaveSuccess(false);
   };
 
+  const SAVE_SUCCESS_DISPLAY_MS = 2000;
+
   const handleSave = React.useCallback(async () => {
     if (!sql.trim()) return;
 
@@ -76,8 +78,7 @@ export function SqlInputSidebar({ onBackClick, onSqlChange, isLoading, error }: 
       await queryClient.invalidateQueries({ queryKey: ['sql-files'] });
 
       setSaveSuccess(true);
-      // Clear success indicator after 2 seconds
-      setTimeout(() => setSaveSuccess(false), 2000);
+      setTimeout(() => setSaveSuccess(false), SAVE_SUCCESS_DISPLAY_MS);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save file');
     } finally {
