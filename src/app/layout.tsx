@@ -7,6 +7,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 // import { CollaborationProvider } from "@/context/collaboration-context";
 import { DiagramEventsProvider } from "@/context/diagram-events-context";
 import { ToastProvider } from "@/components/toast";
+import { GlobalStructuredData } from "@/components/structured-data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,6 +80,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <GlobalStructuredData />
+      </head>
       <ClerkProvider>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
