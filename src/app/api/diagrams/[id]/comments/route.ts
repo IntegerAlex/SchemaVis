@@ -207,15 +207,13 @@ export async function PATCH(
     return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
   }
 
-  // Only comment author or diagram owner can edit content
-  if (parsed.data.content !== undefined) {
-    const isOwner = await checkPermission(diagramId, userId, 'owner');
-    if (existingComment.userId !== userId && !isOwner) {
-      return NextResponse.json(
-        { error: 'Only comment author or diagram owner can edit content' },
-        { status: 403 }
-      );
-    }
+  // Only comment author or diagram owner can edit the comment
+  const isOwner = await checkPermission(diagramId, userId, 'owner');
+  if (existingComment.userId !== userId && !isOwner) {
+    return NextResponse.json(
+      { error: 'Only comment author or diagram owner can edit comments' },
+      { status: 403 }
+    );
   }
 
   const updates: { content?: string; resolved?: boolean } = {};
