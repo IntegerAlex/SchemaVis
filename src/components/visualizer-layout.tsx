@@ -24,7 +24,7 @@ import { SqlInputSidebar } from './sql-input-sidebar';
 // import { RightSidebar } from './right-sidebar';
 // import { useOptionalCollaboration } from '@/context/collaboration-context';
 // import type { CommentData } from '@/lib/collaboration/types';
-import { detectDatabaseType } from '@/lib/parsers';
+import { detectDatabaseType } from '@/lib/parsers/detect';
 import { DatabaseType } from '@/lib/domain/database-type';
 import { useToast } from './toast';
 
