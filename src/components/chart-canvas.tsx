@@ -210,31 +210,6 @@ export function ChartCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relationshipEdges]); // setEdges is stable from useEdgesState
 
-  if (!diagram) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-zinc-400 gap-3">
-        <svg className="size-12 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} role="img" aria-label="Database icon">
-          <title>Database schema</title>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75" />
-        </svg>
-        <p className="text-sm font-medium">No diagram to display</p>
-        <p className="text-xs text-zinc-500">Upload or paste SQL to generate a schema visualization</p>
-      </div>
-    );
-  }
-
-  // Sharing and collaboration features temporarily disabled
-  // // Store collaboration functions in refs to prevent re-renders
-  // const sendNodeDragRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
-  // const sendNodeDragEndRef = useRef<((nodeId: string, x: number, y: number) => void) | null>(null);
-  // const sendCommentCreateRef = useRef<((content: string, x: number, y: number, parentId?: number, diagramContent?: Record<string, unknown>, diagramName?: string, databaseType?: string) => void) | null>(null);
-
-  // useEffect(() => {
-  //   sendNodeDragRef.current = collaboration?.sendNodeDrag ?? null;
-  //   sendNodeDragEndRef.current = collaboration?.sendNodeDragEnd ?? null;
-  //   sendCommentCreateRef.current = collaboration?.sendCommentCreate ?? null;
-  // }, [collaboration?.sendNodeDrag, collaboration?.sendNodeDragEnd]);
-
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       setHighlightedId(node.id);
@@ -471,6 +446,23 @@ export function ChartCanvas({
     };
   }, []);
 
+  const defaultViewport = useMemo(() => ({ x: 0, y: 0, zoom: 0.8 }), []);
+  const proOptions = useMemo(() => ({ hideAttribution: true }), []);
+  const cursorStyle = useMemo(() => ({ cursor: isAddingComment ? 'crosshair' : undefined }), [isAddingComment]);
+
+  if (!diagram) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-zinc-400 gap-3">
+        <svg className="size-12 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} role="img" aria-label="Database icon">
+          <title>Database schema</title>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75" />
+        </svg>
+        <p className="text-sm font-medium">No diagram to display</p>
+        <p className="text-xs text-zinc-500">Upload or paste SQL to generate a schema visualization</p>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className="relative w-full h-full">
       <ReactFlow
@@ -484,14 +476,14 @@ export function ChartCanvas({
         fitView
         minZoom={0.1}
         maxZoom={2}
-        defaultViewport={useMemo(() => ({ x: 0, y: 0, zoom: 0.8 }), [])}
+        defaultViewport={defaultViewport}
         className="w-full h-full"
         nodesDraggable={canEdit}
         nodesConnectable={false}
         elementsSelectable={true}
-        proOptions={useMemo(() => ({ hideAttribution: true }), [])}
+        proOptions={proOptions}
         onPaneClick={handlePaneClick}
-        style={useMemo(() => ({ cursor: isAddingComment ? 'crosshair' : undefined }), [isAddingComment])}
+        style={cursorStyle}
       >
         <Background />
         {showControls && (
@@ -586,4 +578,3 @@ export function useCommentMode() {
   const [isAddingComment, setIsAddingComment] = useState(false);
   return { isAddingComment, setIsAddingComment };
 }
-
