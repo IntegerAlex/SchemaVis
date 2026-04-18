@@ -284,7 +284,7 @@ export default async function BlogPostPage({ params }: Props) {
               <div className="flex items-center gap-2">
                 <span>© 2025 SchemaVis</span>
                 <span className="text-slate-600">•</span>
-                <span>GOSSORG</span>
+                <a href="https://gossorg.in/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">GOSSORG</a>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link href="/" className="hover:text-white transition">
