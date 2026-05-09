@@ -7,6 +7,10 @@ SchemaVis is an AGPL-3.0-or-later application for visualizing database schemas. 
 Repository: <https://github.com/IntegerAlex/SchemaVis>
 Live: <https://schemavis.gossorg.in>
 
+## Demo
+
+[![SchemaVis Demo](https://img.youtube.com/vi/cEfHPmlJgHU/maxresdefault.jpg)](https://youtube.com/watch?v=cEfHPmlJgHU)
+
 ## Screens
 
 ![Landing page](./public/landing.png)

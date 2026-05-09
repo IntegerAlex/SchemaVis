@@ -11,7 +11,7 @@
     import { useParseSQLContext } from '@/context/parse-sql-context';
     import { cn } from '@/lib/utils';
     import Image from 'next/image';
-    import { FileText, Loader2, Menu, X, Plus } from 'lucide-react';
+    import { FileText, Loader2, Menu, X, Plus, Github } from 'lucide-react';
     import { ReactFlowProvider } from '@xyflow/react';
     import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
 import { SqlFilesSidebar } from './sql-files-sidebar';
@@ -226,7 +226,7 @@ import { useToast } from './toast';
             <div className="px-6 sm:px-8 lg:px-10 xl:px-12 2xl:px-16 max-w-7xl w-full mx-auto">
             <div className="flex h-16 items-center justify-between gap-4">
                 {/* Logo + active-file breadcrumb */}
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-4 min-w-0">
                     <Image
                     src="/logo.png"
                     alt="SchemaVis logo"
@@ -235,6 +235,15 @@ import { useToast } from './toast';
                     className="h-10 w-10 object-contain"
                     priority
                     />
+                    <a 
+                        href="https://github.com/IntegerAlex/schemavis" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-slate-300 hover:text-white transition flex items-center"
+                        aria-label="View on GitHub"
+                    >
+                        <Github className="h-8 w-8 sm:h-9 sm:w-9" />
+                    </a>
                     {selectedFileName && !parseMutation.isPending && (
                         <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-400 min-w-0">
                             <span className="text-slate-600">/</span>

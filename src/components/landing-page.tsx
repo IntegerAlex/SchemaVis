@@ -8,7 +8,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import { Database, Shield, Zap } from 'lucide-react';
+import { Database, Shield, Zap, Github } from 'lucide-react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { ChartCanvas } from './chart-canvas';
 import type { Diagram } from '@/lib/domain/diagram';
@@ -196,14 +196,25 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
           <header className="px-6 py-5 flex items-center justify-between max-w-7xl mx-auto w-full">
-            <Image
-              src="/logo.png"
-              alt="SchemaVis logo"
-              width={240}
-              height={240}
-              className="h-24 w-24 object-contain scale-150"
-              priority
-            />
+            <div className="flex items-center gap-6">
+              <Image
+                src="/logo.png"
+                alt="SchemaVis logo"
+                width={240}
+                height={240}
+                className="h-24 w-24 object-contain scale-150"
+                priority
+              />
+              <a 
+                href="https://github.com/IntegerAlex/schemavis" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-slate-300 hover:text-white transition flex items-center"
+                aria-label="View on GitHub"
+              >
+                <Github className="h-10 w-10 sm:h-12 sm:w-12" />
+              </a>
+            </div>
 
           <div className="flex items-center gap-4">
             <SignedIn>
@@ -298,13 +309,20 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
         <footer className="px-6 pb-10">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-400">
-            <div className="flex items-center gap-2">
-              <span>© 2025 SchemaVis</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span>© 2026 SchemaVis</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-slate-400">By <a href="https://akshatkotpalliwar.in/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Akshat Kotpalliwar</a></span>
               <span className="text-slate-600">•</span>
               <a href="https://gossorg.in/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">GOSSORG</a>
+              <span className="text-slate-600">•</span>
+              <span className="px-2 py-0.5 rounded border border-white/10 bg-white/5 text-xs text-slate-300">AGPL-3.0</span>
+              <span className="text-slate-600">•</span>
+              <a href="https://github.com/IntegerAlex/schemavis" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository" className="hover:text-white transition text-slate-400 flex items-center">
+                <Github className="h-4 w-4" />
+              </a>
             </div>
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="flex flex-col gap-4">                <div className="flex flex-wrap items-center justify-center gap-4">
                   <a
                     href="/alternatives"
                     className="hover:text-white transition"
@@ -348,4 +366,3 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
     </div>
   );
 }
-

@@ -24,17 +24,21 @@ export const metadata: Metadata = {
     template: "%s | SchemaVis",
     default: "SchemaVis - Free Open Source Database Schema Visualizer",
   },
-  description: "Visualize, explore, and document your database schemas instantly from SQL files. Fast, free, and open-source schema visualization tool for PostgreSQL, MySQL, SQL Server, and more.",
+  description: "SchemaVis is a free, open-source (AGPLv3) database schema visualizer. Generate interactive ER diagrams from SQL instantly. Collaborate, document, and explore PostgreSQL, MySQL, and more.",
   metadataBase: new URL("https://schemavis.gossorg.in"),
-  keywords: ["database visualization", "schema visualizer", "sql diagram", "ERD tool", "PostgreSQL", "MySQL", "database schema design", "open source ERD"],
-  authors: [{ name: "Akshat Kotpalliwar" }],
+  keywords: [
+    "database visualization", "schema visualizer", "sql diagram", "ERD tool", 
+    "PostgreSQL ERD", "MySQL schema", "database design", "open source ERD",
+    "AGPLv3 database tool", "SQL to ERD", "database documentation", "SchemaVis", "free schema tool"
+  ],
+  authors: [{ name: "Akshat Kotpalliwar", url: "https://github.com/IntegerAlex" }],
   creator: "Akshat Kotpalliwar",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://schemavis.gossorg.in",
-    title: "SchemaVis - Free Open Source Database Schema Visualizer",
-    description: "Visualize, explore, and document your database schemas instantly from SQL files. Fast, free, and open-source.",
+    title: "SchemaVis - Open Source Database Schema Visualizer",
+    description: "Instantly visualize and document your database schemas from SQL files. Fast, free, collaborative, and open-source under AGPLv3.",
     siteName: "SchemaVis",
     images: [{
       url: "/landing.png",
@@ -45,8 +49,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SchemaVis - Free Open Source Database Schema Visualizer",
-    description: "Visualize, explore, and document your database schemas instantly from SQL files. Fast, free, and open-source.",
+    title: "SchemaVis - Free Database Schema Visualizer",
+    description: "Generate interactive ER diagrams from SQL instantly. Free, fast, and open-source.",
     images: ["/landing.png"],
     creator: "@IntegerAlex",
   },
