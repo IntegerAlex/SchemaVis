@@ -319,6 +319,14 @@ function generateViews(
   ];
 }
 
+export function generateTableSQL(
+  table: DBTable,
+  databaseType: DatabaseType = DatabaseType.POSTGRESQL,
+): string {
+  const escapeId = getEscaper(databaseType);
+  return generateCreateTable(table, databaseType, escapeId);
+}
+
 export function generateSQL(
   diagram: Diagram,
   options: GenerateSQLOptions = {},

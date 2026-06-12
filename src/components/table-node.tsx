@@ -1,26 +1,28 @@
-'use client';
+"use client";
 /**
  * This file is part of the SchemaVis project.
  * Copyright (C) 2025 Akshat Kotpalliwar (IntegerAlex)
  * Licensed under the GNU Affero General Public License v3.0 or later.
  */
 
-import { memo, useMemo, useCallback } from 'react';
-import type { CSSProperties } from 'react';
-import { Handle, type NodeProps, Position, type Node } from '@xyflow/react';
-import type { DBTable } from '@/lib/domain/db-table';
-import type { DBField } from '@/lib/domain/db-field';
-import { cn } from '@/lib/utils';
+import { memo, useMemo, useCallback, useState } from "react";
+import type { CSSProperties } from "react";
+import { Handle, type NodeProps, Position, type Node } from "@xyflow/react";
+import type { DBTable } from "@/lib/domain/db-table";
+import type { DBField } from "@/lib/domain/db-field";
+import { cn } from "@/lib/utils";
+import { Copy, Check } from "lucide-react";
 
 interface TableNodeData extends Record<string, unknown> {
   table: DBTable;
   isDimmed?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  onCopySQL?: () => void;
   relatedFieldIds?: Set<string>;
 }
 
-type TableNodeType = Node<TableNodeData, 'table'>;
+type TableNodeType = Node<TableNodeData, "table">;
 
 /** Memoized field row to avoid re-rendering unchanged fields */
 const FieldRow = memo(function FieldRow({
@@ -66,8 +68,7 @@ const FieldRow = memo(function FieldRow({
       </div>
       <span className="text-xs text-zinc-500 dark:text-zinc-400 ml-3 whitespace-nowrap">
         {field.type.name}
-        {field.characterMaximumLength &&
-          `(${field.characterMaximumLength})`}
+        {field.characterMaximumLength && `(${field.characterMaximumLength})`}
         {field.precision &&
           field.scale &&
           `(${field.precision},${field.scale})`}
@@ -81,23 +82,32 @@ const FieldRow = memo(function FieldRow({
 
 export const TableNode = memo((props: NodeProps<TableNodeType>) => {
   const { data, selected, dragging } = props;
-  const { table, isDimmed, isExpanded, onToggleExpand, relatedFieldIds } = data;
+  const {
+    table,
+    isDimmed,
+    isExpanded,
+    onToggleExpand,
+    onCopySQL,
+    relatedFieldIds,
+  } = data;
   const maxCollapsed = 10;
   const fieldStaggerDelayMs = 30;
+  const [copied, setCopied] = useState(false);
 
   const visibleFields: DBField[] = useMemo(() => {
     if (isExpanded || table.fields.length <= maxCollapsed) return table.fields;
 
     const required = table.fields.filter(
-      (f: DBField) => f.primaryKey || relatedFieldIds?.has(f.id)
+      (f: DBField) => f.primaryKey || relatedFieldIds?.has(f.id),
     );
     const optional = table.fields.filter(
-      (f: DBField) => !(f.primaryKey || relatedFieldIds?.has(f.id))
+      (f: DBField) => !(f.primaryKey || relatedFieldIds?.has(f.id)),
     );
 
     const keepRequired = required.slice(0, maxCollapsed);
     const remainingSlots = maxCollapsed - keepRequired.length;
-    const keepOptional = remainingSlots > 0 ? optional.slice(0, remainingSlots) : [];
+    const keepOptional =
+      remainingSlots > 0 ? optional.slice(0, remainingSlots) : [];
 
     const keepSet = new Set([...keepRequired, ...keepOptional]);
     return table.fields.filter((f: DBField) => keepSet.has(f));
@@ -107,25 +117,54 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
     onToggleExpand?.();
   }, [onToggleExpand]);
 
+  const handleCopySQL = useCallback(() => {
+    if (!onCopySQL) return;
+    onCopySQL();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [onCopySQL]);
+
   return (
     <div
       className={cn(
-        'relative bg-white dark:bg-zinc-800 border-2 rounded-lg shadow-lg min-w-[200px] transition-[border-color,box-shadow,opacity] duration-200',
+        "relative bg-white dark:bg-zinc-800 border-2 rounded-lg shadow-lg min-w-[200px] transition-[border-color,box-shadow,opacity] duration-200",
         selected
-          ? 'z-20 border-blue-500 dark:border-blue-400 ring-2 ring-blue-500/30 brightness-110 contrast-110 shadow-xl'
-          : 'z-0 border-zinc-300 dark:border-zinc-600 hover:shadow-xl hover:border-zinc-400 dark:hover:border-zinc-500',
-        dragging && 'opacity-80',
-        isDimmed && !selected ? 'opacity-50 brightness-75' : ''
+          ? "z-20 border-blue-500 dark:border-blue-400 ring-2 ring-blue-500/30 brightness-110 contrast-110 shadow-xl"
+          : "z-0 border-zinc-300 dark:border-zinc-600 hover:shadow-xl hover:border-zinc-400 dark:hover:border-zinc-500",
+        dragging && "opacity-80",
+        isDimmed && !selected ? "opacity-50 brightness-75" : "",
       )}
-      style={{ contain: 'layout style' }}
+      style={{ contain: "layout style" }}
     >
       {/* Table Header */}
       <div
-        className="px-4 py-2 font-semibold text-white rounded-t-lg"
+        className="px-4 py-2 font-semibold text-white rounded-t-lg relative group/header"
         style={{ backgroundColor: table.color }}
       >
         <div className="text-sm">{table.schema && `${table.schema}.`}</div>
         <div className="text-base">{table.name}</div>
+        {onCopySQL && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopySQL();
+            }}
+            className={cn(
+              "absolute top-2 right-2 p-1 rounded transition-all duration-200",
+              "opacity-0 group-hover/header:opacity-100",
+              "bg-white/20 hover:bg-white/30 text-white",
+            )}
+            title="Copy CREATE TABLE SQL"
+            aria-label={`Copy SQL for ${table.name}`}
+          >
+            {copied ? (
+              <Check className="size-3.5" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Fields */}
@@ -136,7 +175,9 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
             field={field}
             animationStyle={
               isExpanded && index >= maxCollapsed
-                ? { animation: `fadeSlideIn 200ms ${(index - maxCollapsed) * fieldStaggerDelayMs}ms both` }
+                ? {
+                    animation: `fadeSlideIn 200ms ${(index - maxCollapsed) * fieldStaggerDelayMs}ms both`,
+                  }
                 : undefined
             }
           />
@@ -147,7 +188,9 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
             onClick={handleToggle}
             className="w-full px-4 py-2 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline text-center transition-colors bg-blue-50/40 dark:bg-blue-900/20"
           >
-            {isExpanded ? 'Show less' : `+${table.fields.length - maxCollapsed} more fields`}
+            {isExpanded
+              ? "Show less"
+              : `+${table.fields.length - maxCollapsed} more fields`}
           </button>
         )}
       </div>
@@ -155,5 +198,4 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
   );
 });
 
-TableNode.displayName = 'TableNode';
-
+TableNode.displayName = "TableNode";

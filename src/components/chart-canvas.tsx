@@ -30,7 +30,7 @@ import type { Diagram } from "@/lib/domain/diagram";
 // import { CommentThread } from './comments/comment-thread';
 // import { CommentInputBox } from './comments/comment-input-box';
 import { ContextMenu, createContextMenuItems } from "./context-menu";
-import { generateSQL } from "@/lib/sql-generator";
+import { generateSQL, generateTableSQL } from "@/lib/sql-generator";
 import { useToast } from "./toast";
 // import type { CommentData } from '@/lib/collaboration/types';
 
@@ -173,6 +173,14 @@ export function ChartCanvas({
         isDimmed: highlightedId !== null && highlightedId !== table.id,
         isExpanded: expandedTables.has(table.id),
         onToggleExpand: () => toggleExpand(table.id),
+        onCopySQL: () => {
+          const dbType = diagram.databaseType;
+          const sql = generateTableSQL(table, dbType);
+          navigator.clipboard.writeText(sql).then(
+            () => showToast(`"${table.name}" CREATE TABLE copied`, "success"),
+            () => showToast("Failed to copy SQL", "error"),
+          );
+        },
         relatedFieldIds:
           relatedFieldIdsByTable.get(table.id) ?? new Set<string>(),
       },
@@ -185,6 +193,7 @@ export function ChartCanvas({
     highlightedId,
     toggleExpand,
     relatedFieldIdsByTable,
+    showToast,
   ]);
 
   const relationshipEdges: Edge[] = useMemo(() => {
