@@ -4,6 +4,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --t-50: #eff6ff;
+  --t-100: #dbeafe;
+  --t-200: #bfdbfe;
+  --t-300: #93c5fd;
+  --t-400: #60a5fa;
+  --t-500: #3b82f6;
+  --t-600: #2563eb;
+  --t-700: #1d4ed8;
+  --t-800: #1e40af;
+  --t-900: #1e3a8a;
+  --t-950: #172554;
 }
 
 @theme inline {
@@ -28,7 +39,8 @@ body {
 
 /* Custom animations for landing page */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -37,7 +49,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.5;
     transform: scale(1);
   }
@@ -104,11 +117,22 @@ body {
 
 /* Delete dialog warning icon shake */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%       { transform: translateX(-5px) rotate(-3deg); }
-  40%       { transform: translateX(5px) rotate(3deg); }
-  60%       { transform: translateX(-4px) rotate(-2deg); }
-  80%       { transform: translateX(4px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px) rotate(-3deg);
+  }
+  40% {
+    transform: translateX(5px) rotate(3deg);
+  }
+  60% {
+    transform: translateX(-4px) rotate(-2deg);
+  }
+  80% {
+    transform: translateX(4px) rotate(2deg);
+  }
 }
 
 .animate-shake {
@@ -165,4 +189,150 @@ body {
 /* Isolate React Flow edges to limit layout and style recalculation */
 .react-flow__edges {
   contain: layout style;
+}
+
+/* ───── Theme utility classes ───── */
+.bg-t-50 {
+  background-color: var(--t-50);
+}
+.bg-t-100 {
+  background-color: var(--t-100);
+}
+.bg-t-200 {
+  background-color: var(--t-200);
+}
+.bg-t-300 {
+  background-color: var(--t-300);
+}
+.bg-t-400 {
+  background-color: var(--t-400);
+}
+.bg-t-500 {
+  background-color: var(--t-500);
+}
+.bg-t-600 {
+  background-color: var(--t-600);
+}
+.bg-t-700 {
+  background-color: var(--t-700);
+}
+.bg-t-800 {
+  background-color: var(--t-800);
+}
+.bg-t-900 {
+  background-color: var(--t-900);
+}
+.bg-t-950 {
+  background-color: var(--t-950);
+}
+
+.text-t-50 {
+  color: var(--t-50);
+}
+.text-t-100 {
+  color: var(--t-100);
+}
+.text-t-200 {
+  color: var(--t-200);
+}
+.text-t-300 {
+  color: var(--t-300);
+}
+.text-t-400 {
+  color: var(--t-400);
+}
+.text-t-500 {
+  color: var(--t-500);
+}
+.text-t-600 {
+  color: var(--t-600);
+}
+.text-t-700 {
+  color: var(--t-700);
+}
+.text-t-800 {
+  color: var(--t-800);
+}
+.text-t-900 {
+  color: var(--t-900);
+}
+.text-t-950 {
+  color: var(--t-950);
+}
+
+.border-t-50 {
+  border-color: var(--t-50);
+}
+.border-t-100 {
+  border-color: var(--t-100);
+}
+.border-t-200 {
+  border-color: var(--t-200);
+}
+.border-t-300 {
+  border-color: var(--t-300);
+}
+.border-t-400 {
+  border-color: var(--t-400);
+}
+.border-t-500 {
+  border-color: var(--t-500);
+}
+.border-t-600 {
+  border-color: var(--t-600);
+}
+.border-t-700 {
+  border-color: var(--t-700);
+}
+.border-t-800 {
+  border-color: var(--t-800);
+}
+.border-t-900 {
+  border-color: var(--t-900);
+}
+.border-t-950 {
+  border-color: var(--t-950);
+}
+
+.ring-t-500 {
+  --tw-ring-color: var(--t-500);
+}
+.ring-t-400 {
+  --tw-ring-color: var(--t-400);
+}
+
+/* Canvas surfaces with theme tint */
+.bg-surface-1 {
+  background-color: color-mix(in srgb, var(--t-950) 12%, #0f172a);
+}
+.bg-surface-2 {
+  background-color: color-mix(in srgb, var(--t-950) 20%, #0f172a);
+}
+.bg-surface-3 {
+  background-color: color-mix(in srgb, var(--t-950) 30%, #0f172a);
+}
+
+/* Table node headers — default to theme accent, allow per-node override */
+.react-flow__node .table-header {
+  background-color: var(--table-bg, var(--t-400));
+}
+
+/* Glass panels */
+.bg-glass {
+  background: color-mix(in srgb, var(--t-950) 6%, rgba(15, 23, 42, 0.8));
+  backdrop-filter: blur(24px) saturate(1.5);
+}
+
+/* Theme gradient accent */
+.bg-theme-gradient {
+  background: linear-gradient(135deg, var(--t-600), var(--t-400));
+}
+
+/* Glow shadows */
+.shadow-theme-glow {
+  box-shadow: 0 20px 70px -30px
+    color-mix(in srgb, var(--t-500) 45%, transparent);
+}
+.shadow-theme-glow-sm {
+  box-shadow: 0 8px 30px -10px color-mix(in srgb, var(--t-500) 30%, transparent);
 }

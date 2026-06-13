@@ -1,17 +1,18 @@
 "use client";
+
 /**
  * This file is part of the SchemaVis project.
  * Copyright (C) 2025 Akshat Kotpalliwar (IntegerAlex)
  * Licensed under the GNU Affero General Public License v3.0 or later.
  */
 
-import { memo, useMemo, useCallback, useState } from "react";
+import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
+import { Check, Copy } from "lucide-react";
 import type { CSSProperties } from "react";
-import { Handle, type NodeProps, Position, type Node } from "@xyflow/react";
-import type { DBTable } from "@/lib/domain/db-table";
+import { memo, useCallback, useMemo, useState } from "react";
 import type { DBField } from "@/lib/domain/db-field";
+import type { DBTable } from "@/lib/domain/db-table";
 import { cn } from "@/lib/utils";
-import { Copy, Check } from "lucide-react";
 
 interface TableNodeData extends Record<string, unknown> {
   table: DBTable;
@@ -137,10 +138,7 @@ export const TableNode = memo((props: NodeProps<TableNodeType>) => {
       style={{ contain: "layout style" }}
     >
       {/* Table Header */}
-      <div
-        className="px-4 py-2 font-semibold text-white rounded-t-lg relative group/header"
-        style={{ backgroundColor: table.color }}
-      >
+      <div className="table-header px-4 py-2 font-semibold text-white rounded-t-lg relative group/header">
         <div className="text-sm">{table.schema && `${table.schema}.`}</div>
         <div className="text-base">{table.name}</div>
         {onCopySQL && (

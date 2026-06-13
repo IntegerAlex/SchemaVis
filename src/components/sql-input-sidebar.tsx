@@ -1,17 +1,18 @@
 "use client";
+
 /**
  * This file is part of the SchemaVis project.
  * Copyright (C) 2025 Akshat Kotpalliwar (IntegerAlex)
  * Licensed under the GNU Affero General Public License v3.0 or later.
  */
 
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Check, Loader2, Play, Save, Upload } from "lucide-react";
 import * as React from "react";
-import { ArrowLeft, Loader2, Save, Check, Upload, Play } from "lucide-react";
-import { Button } from "./ui/button";
-import { DatabaseSelector } from "./ui/database-selector";
 import { DatabaseType } from "@/lib/domain/database-type";
 import { cn } from "@/lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "./ui/button";
+import { DatabaseSelector } from "./ui/database-selector";
 
 interface SqlInputSidebarProps {
   onBackClick: () => void;
@@ -182,7 +183,7 @@ export function SqlInputSidebar({
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      <div className="flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_-30px_rgba(59,130,246,0.45)] rounded-tl-2xl rounded-tr-2xl">
+      <div className="flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-glass shadow-theme-glow-sm rounded-tl-2xl rounded-tr-2xl">
         <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10">
           <div className="flex items-center gap-2 flex-1">
             <Button
@@ -237,7 +238,7 @@ export function SqlInputSidebar({
                 <button
                   type="button"
                   onClick={() => fileUploadRef.current?.click()}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-md transition-all border border-blue-500/20 hover:border-blue-500/40"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-t-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-md transition-all border border-blue-500/20 hover:border-blue-500/40"
                 >
                   <Upload className="size-4" />
                   Upload .sql

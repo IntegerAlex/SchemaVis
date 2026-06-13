@@ -23,6 +23,7 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.2",
     "gsap": "^3.12.5",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.559.0",
     "nanoid": "^5.0.7",
     "next": "16.2.6",

@@ -5,26 +5,27 @@
  */
 "use client";
 
-import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  FileText,
+  Check,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Loader2,
-  RefreshCw,
-  Trash2,
   Pencil,
-  Check,
-  X,
+  RefreshCw,
   Share2,
+  Trash2,
+  X,
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { cn } from "@/lib/utils";
-import { useSqlFiles } from "@/hooks/use-sql-files";
+import * as React from "react";
 import { useParseSQLContext } from "@/context/parse-sql-context";
-import { useQueryClient } from "@tanstack/react-query";
+import { useSqlFiles } from "@/hooks/use-sql-files";
+import { cn } from "@/lib/utils";
 import { DeleteConfirmDialog } from "./delete-confirm-dialog";
 import { useToast } from "./toast";
+import { Button } from "./ui/button";
+
 function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const now = new Date();
@@ -270,7 +271,7 @@ export function SqlFilesSidebar({
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      <div className="flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_70px_-30px_rgba(59,130,246,0.45)] rounded-tl-2xl rounded-tr-2xl">
+      <div className="flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-glass shadow-theme-glow-sm rounded-tl-2xl rounded-tr-2xl">
         {/* Header */}
         <div
           className={cn(
@@ -291,7 +292,7 @@ export function SqlFilesSidebar({
               }}
             >
               <FileText
-                className="size-5 text-blue-400 transition-transform duration-500 ease-out"
+                className="size-5 text-t-400 transition-transform duration-500 ease-out"
                 aria-hidden="true"
                 style={{
                   transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -329,7 +330,7 @@ export function SqlFilesSidebar({
               }}
             >
               <FileText
-                className="size-5 text-blue-400 transition-transform duration-500 ease-out"
+                className="size-5 text-t-400 transition-transform duration-500 ease-out"
                 aria-hidden="true"
                 style={{
                   transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -475,7 +476,7 @@ export function SqlFilesSidebar({
                     {renamingId === file.id && !collapsed ? (
                       <div className="flex items-center gap-1.5 flex-1 min-w-0">
                         <FileText
-                          className="shrink-0 text-blue-400 size-4 mt-0.5"
+                          className="shrink-0 text-t-400 size-4 mt-0.5"
                           aria-hidden="true"
                         />
                         <input
@@ -552,7 +553,7 @@ export function SqlFilesSidebar({
                         >
                           <FileText
                             className={cn(
-                              "shrink-0 text-blue-400 transition-all duration-500 ease-out",
+                              "shrink-0 text-t-400 transition-all duration-500 ease-out",
                               collapsed ? "size-5" : "size-4 mt-0.5",
                             )}
                             aria-hidden="true"
@@ -604,7 +605,7 @@ export function SqlFilesSidebar({
                                 )
                               }
                               disabled={deletingId === file.id}
-                              className="h-7 w-7 text-zinc-400 hover:text-blue-400 hover:bg-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg"
+                              className="h-7 w-7 text-zinc-400 hover:text-t-400 hover:bg-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg"
                               aria-label={`Rename SQL file: ${file.title || `Untitled ${file.id}`}`}
                             >
                               <Pencil className="size-3.5" />
